@@ -1075,7 +1075,7 @@ async function pagar(metodo) {
       },
       body: "data=" + encodeURIComponent(JSON.stringify({
         action: "venta",
-        venta
+        ...venta
       }))
     });
     carrito = [];
