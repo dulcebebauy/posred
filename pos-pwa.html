@@ -1058,7 +1058,14 @@ async function pagar(metodo) {
   setPayBtnsDisabled(true);
 
   try {
-    await fetch(API + "?action=venta&data=" + encodeURIComponent(JSON.stringify(venta)));
+    //await fetch(API + "?action=venta&data=" + encodeURIComponent(JSON.stringify(venta)));
+    await fetch(API, {
+      method: "POST",
+      body: JSON.stringify( action: "venta", venta),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
     carrito = [];
     document.getElementById("discount").value = "";
     document.getElementById("discountDesc").value = "";
