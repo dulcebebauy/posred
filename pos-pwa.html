@@ -783,7 +783,8 @@ body {
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbwj0kMoWuN4YWIzxlCbec-hg28R_BblAqXTpyJ8xbLaeBscHMre4de3cP5eQ5sOB2H-5w/exec";
+const API = "https://script.google.com/macros/s/AKfycbwvSHYSnp-NPtcg5NH0y-mNKL5v2ul40txzW-p_gPF9vdzkkCUG19Cf2FwR0PMnBQRU2w/exec";
+            //"https://script.google.com/macros/s/AKfycbwj0kMoWuN4YWIzxlCbec-hg28R_BblAqXTpyJ8xbLaeBscHMre4de3cP5eQ5sOB2H-5w/exec";
             //"https://script.google.com/macros/s/AKfycbzdFU_ltm0LyBSekpx4OYoiZgAsUsGpFH2lfik6e0Ob5o5ajmJFvNSAm57Ys82jbsICAQ/exec";
 
 let productos = [];
@@ -821,7 +822,6 @@ async function cargarProductos() {
 
     if (!localTs || localTs !== serverTs) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
-      const list = Array.isArray(data) ? data : (data.data || []);
       productos = list.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
       renderProductos();
       localStorage.setItem("productos", JSON.stringify(productos));
