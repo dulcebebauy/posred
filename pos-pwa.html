@@ -1062,7 +1062,7 @@ async function pagar(metodo) {
     //await fetch(API + "?action=venta&data=" + encodeURIComponent(JSON.stringify(venta)));
     await fetch(API, {
       method: "POST",
-      body: JSON.stringify( action: "venta", venta),
+      body: JSON.stringify( { action: "venta", venta } ),
       headers: {
         "Content-Type": "application/json"
       }
