@@ -2104,7 +2104,8 @@ async function pagar(metodo) {
 
   try {
     //const deviceId = getDeviceId();
-    await fetch(API, {
+    
+    const res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "data=" + encodeURIComponent(JSON.stringify({
@@ -2113,6 +2114,12 @@ async function pagar(metodo) {
         ...venta
       }))
     });
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+    
     carrito = [];
     document.getElementById("discount").value = "";
     document.getElementById("discountDesc").value = "";
