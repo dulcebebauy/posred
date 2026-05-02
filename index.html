@@ -283,6 +283,16 @@ body {
   flex-shrink: 0;
 }
 
+.card-emoji {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* ===== LOADING / EMPTY STATE ===== */
 .state-center {
   height: 100%;
@@ -1585,12 +1595,27 @@ body {
 
 <script>
 const API = "https://script.google.com/macros/s/AKfycbz14I0lfs1YKCQumpEgYSZ4G8zoeGK5veI6cU1j8DE7cWZdo_Xz3sauRAC839NagcLO5w/exec";
-			//"https://script.google.com/macros/s/AKfycbzToXXl84KE5kxx7ZFAinfiwdtNjQCWMVoy-SNAPT1ikvHsDpFnlqGDTYZ_7rxbc3Gb/exec";
+                        //"https://script.google.com/macros/s/AKfycbzToXXl84KE5kxx7ZFAinfiwdtNjQCWMVoy-SNAPT1ikvHsDpFnlqGDTYZ_7rxbc3Gb/exec";
 
 let productos = [];
 let carrito = [];
 let drawerOpen = false;
 let currentDiscount = 0;
+
+/* ========== CATEGORY EMOJI ========== */
+const CATEGORY_EMOJI = {
+  bebidas_calientes: "☕",
+  bebidas_frias:     "🥤",
+  dulces:            "🍬",
+  postres:           "🍮",
+  salados:           "🥪",
+  tortas:            "🎂",
+  meriendas:         "🥐"
+};
+
+function getCategoryEmoji(categoria) {
+  return CATEGORY_EMOJI[categoria] || "";
+}
 
 /* ========== UTILS ========== */
 function fmt(n) {
@@ -1659,7 +1684,9 @@ function renderProductos(lista = productos) {
     const div = document.createElement("div");
     div.className = "card" + (qty > 0 ? " in-cart" : "");
     div.onclick = () => addToCart(p);
+    const emoji = getCategoryEmoji(p.categoria);
     div.innerHTML = `
+      ${emoji ? `<div class="card-emoji">${emoji}</div>` : ""}
       ${qty > 0 ? `<div class="card-qty">${qty}</div>` : ""}
       <div class="card-name">${p.nombre}</div>
       <div class="card-bottom">
