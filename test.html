@@ -2587,9 +2587,16 @@ function capitalizarTexto(str) {
     .join(" ");
 }
 function recargarProductos(force = false) {
-   document.getElementById("search-clear").style.display =
-    input ? "block" : "none";
-  cargarProductos(force);
+  const stateEl = document.getElementById("stateCenter");
+  const grid = document.getElementById("grid");
+
+  // Mostrar loader
+  grid.innerHTML = "";
+  stateEl.style.display = "flex";
+  stateEl.innerHTML = '<div class="spinner"></div>';
+
+  // Forzar recarga
+  await cargarProductos(true);
 }
 </script>
 </body>
