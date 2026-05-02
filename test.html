@@ -1728,7 +1728,7 @@ const POSTOKEN = "pos_123";
 
 
 function checkSession() {
-  return localStorage.getItem("session") === "active";
+  return localStorage.getItem("session") === "active" && (localStorage.getItem("user") != "" || localStorage.getItem("pass") != "");
 }
 
 function doLogin() {
