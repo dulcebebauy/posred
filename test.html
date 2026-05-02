@@ -2156,11 +2156,27 @@ function setPayBtnsDisabled(v) {
 }
 
 /* ========== BUSCADOR ========== */
-function handleSearch() {
+/*
+  function handleSearch() {
   const val = document.getElementById("search").value;
   document.getElementById("search-clear").style.display = val ? "flex" : "none";
   const txt = val.toLowerCase();
   renderProductos(productos.filter(p => p.nombre.toLowerCase().includes(txt)));
+}
+*/
+function handleSearch() {
+  const input = document.getElementById("search").value;
+  //document.getElementById("search-clear").style.display = val ? "flex" : "none";
+  const texto = normalizarTexto(input);
+
+  const filtrados = productos.filter(p =>
+    normalizarTexto(p.nombre).includes(texto)
+  );
+
+  renderProductos(filtrados);
+
+  document.getElementById("search-clear").style.display =
+    input ? "block" : "none";
 }
 
 function clearSearch() {
@@ -2553,13 +2569,11 @@ async function generarRespaldo() {
 }
 
 /* ========== HELPER ========== */
-function getDeviceId() {
-  let id = localStorage.getItem("deviceId");
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem("deviceId", id);
-  }
-  return id;
+function normalizarTexto(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")                 // separa letras y tildes
+    .replace(/[\u0300-\u036f]/g, ""); // elimina tildes
 }
 </script>
 </body>
