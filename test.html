@@ -1898,7 +1898,7 @@ function renderProductos(lista = productos) {
     div.innerHTML = `
       ${emoji ? `<div class="card-emoji">${emoji}</div>` : ""}
       ${qty > 0 ? `<div class="card-qty">${qty}</div>` : ""}
-      <div class="card-name">${p.nombre}</div>
+      <div class="card-name">${capitalizarTexto(p.nombre)}</div>
       <div class="card-bottom">
         <span class="card-price">${fmt(p.precio)}</span>
         <div class="card-btn">
@@ -2574,6 +2574,14 @@ function normalizarTexto(str) {
     .toLowerCase()
     .normalize("NFD")                 // separa letras y tildes
     .replace(/[\u0300-\u036f]/g, ""); // elimina tildes
+}
+function capitalizarTexto(str) {
+  return str
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" ");
 }
 </script>
 </body>
