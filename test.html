@@ -1595,7 +1595,8 @@ body {
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbwFGnDKrDtRYozpssEcsqaHnH86cLAfYAAREGnGXcrf3jiZWd5fl1Ok5i1h-cyjGzY/exec";
+const API = "https://script.google.com/macros/s/AKfycbxjsaOM3eUsfKxkHRWNBXXrlfsNW9vM2W1A7k9Euk5Z2NXWMjtPVXgach1-m2CtfsIH/exec";
+            //"https://script.google.com/macros/s/AKfycbwFGnDKrDtRYozpssEcsqaHnH86cLAfYAAREGnGXcrf3jiZWd5fl1Ok5i1h-cyjGzY/exec";
             //"https://script.google.com/macros/s/AKfycbzfE2yEnl2OmMBDRFNMCDO6FIm3UegMTqOvbbz3WrM6-87ruWqIFoNrybAxBsIhQOeM/exec";
             //"https://script.google.com/macros/s/AKfycbyAq8_nre4uTywjzK0gNKkIc3hL8rjGq2jzCl5gGAq-jowdMJoKD2pGjZ9apJjJdlng/exec";
             //"https://script.google.com/macros/s/AKfycbzhI9oBjiBNzmAD-vb6Kxk74bR5zFrNuvlIwX2T65cyAT4-psR1Hg0sUqRJJK4WA__tUA/exec";
@@ -1899,6 +1900,7 @@ async function pagar(metodo) {
   setPayBtnsDisabled(true);
 
   try {
+    const deviceId = getDeviceId();
     await fetch(API, {
       method: "POST",
       headers: {
@@ -1907,6 +1909,7 @@ async function pagar(metodo) {
       body: "data=" + encodeURIComponent(JSON.stringify({
         action: "venta",
         token: POSTOKEN,
+        deviceId: deviceId,
         ...venta
       }))
     });
@@ -2337,7 +2340,17 @@ async function generarRespaldo() {
     btn.classList.remove("loading");
   }
 }
+/* ========== HELPER ======== */
+function getDeviceId() {
+  let id = localStorage.getItem("deviceId");
 
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("deviceId", id);
+  }
+
+  return id;
+}
 /* ========== INIT ========== */
 loadCart();
 cargarProductos();
