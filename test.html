@@ -1757,6 +1757,8 @@ function doLogin() {
   localStorage.setItem("pass", passInput);
   localStorage.setItem("session", "active");
   showPOS();
+  loadCart();
+  cargarProductos();
 }
 
 function doLogout() {
