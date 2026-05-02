@@ -1860,7 +1860,7 @@ async function cargarProductos( force = false) {
     const tsData = await fetch(API + "?action=timestamp").then(r => r.json());
     const serverTs = String(tsData.timestamp);
 
-    if (!localTs || localTs !== serverTs || productos.length == 0) {
+    if (!localTs || localTs !== serverTs || productos.length == 0 || !force) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
       productos = data.sort((a, b) =>
         a.nombre.trim().localeCompare(b.nombre.trim(), "es", { sensitivity: "base" })
