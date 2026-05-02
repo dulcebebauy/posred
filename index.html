@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -153,6 +154,37 @@ body {
   40%  { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
+
+/* ===== REPORT BUTTON ===== */
+.report-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--muted);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--fg);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.report-btn:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.report-btn:active { transform: scale(0.97); }
+
+.report-btn svg { flex-shrink: 0; }
 
 /* ===== MAIN GRID ===== */
 .main {
@@ -350,7 +382,7 @@ body {
   transform: translateY(100%);
   transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
   will-change: transform;
-  touch-action: none; /* 👈 bloquea gestos de arrastre */
+  touch-action: none;
 }
 
 .drawer.open {
@@ -377,7 +409,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 16px 12px; /* 👈 más aire arriba */
+  padding: 18px 16px 12px;
   border-bottom: 1px solid var(--border);
   position: relative;
 }
@@ -701,6 +733,312 @@ body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ===== REPORT PANEL ===== */
+.report-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.report-panel.open {
+  transform: translateX(0);
+}
+
+.report-header {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.report-header-title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fg);
+}
+
+.report-header-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-fg);
+}
+
+.report-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Filter card */
+.filter-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-card h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-fg);
+  margin-bottom: 12px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 130px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-fg);
+}
+
+.filter-group input[type="date"] {
+  height: 40px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 0 10px;
+  background: var(--muted);
+  color: var(--fg);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  user-select: auto;
+}
+
+.filter-group input[type="date"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  background: var(--surface);
+}
+
+.filter-apply-btn {
+  height: 40px;
+  padding: 0 18px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.filter-apply-btn:hover { filter: brightness(1.08); }
+.filter-apply-btn:active { transform: scale(0.97); }
+
+/* Quick date filters */
+.quick-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.qf-btn {
+  height: 32px;
+  padding: 0 12px;
+  background: var(--muted);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted-fg);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.qf-btn:hover, .qf-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* Summary cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 600px) { .summary-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.summary-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-fg);
+}
+
+.summary-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--fg);
+  line-height: 1.2;
+}
+
+.summary-card.green .summary-value { color: var(--green); }
+.summary-card.blue  .summary-value { color: var(--blue); }
+.summary-card.purple .summary-value { color: var(--purple); }
+
+/* Chart card */
+.chart-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-card h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-fg);
+  margin-bottom: 14px;
+}
+
+.chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* Sales table */
+.table-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.table-card h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-fg);
+  margin-bottom: 14px;
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  overflow-x: auto;
+  display: block;
+}
+
+.sales-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: var(--muted);
+  border-bottom: 1.5px solid var(--border);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--muted-fg);
+  white-space: nowrap;
+}
+
+.sales-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.sales-table tr:last-child td { border-bottom: none; }
+
+.sales-table tr:hover td { background: var(--muted); }
+
+.badge-metodo {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-efectivo { background: #d1fae5; color: #065f46; }
+.badge-debito   { background: #dbeafe; color: #1e40af; }
+.badge-credito  { background: #ede9fe; color: #5b21b6; }
+
+.report-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--muted-fg);
+  font-size: 15px;
+}
+
+.report-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 16px;
+  color: var(--muted-fg);
+  font-size: 14px;
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -716,6 +1054,13 @@ body {
 
 <!-- Header -->
 <header class="header">
+  <button class="report-btn" onclick="openReport()" title="Reporte de ventas">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      <path d="M2 20h20"/>
+    </svg>
+    Reporte
+  </button>
   <div class="search-wrap">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     <input type="text" id="search" placeholder="Buscar producto..." oninput="handleSearch()" autocomplete="off">
@@ -797,12 +1142,56 @@ body {
   </div>
 </div>
 
+<!-- ===== REPORT PANEL ===== -->
+<div class="report-panel" id="reportPanel">
+  <div class="report-header">
+    <button class="icon-btn" onclick="closeReport()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div>
+      <div class="report-header-title">Reporte de Ventas</div>
+      <div class="report-header-sub" id="reportSubtitle">Cargando datos...</div>
+    </div>
+    <button class="icon-btn" onclick="cargarVentas()" title="Actualizar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+    </button>
+  </div>
+
+  <div class="report-body" id="reportBody">
+    <!-- Filter card -->
+    <div class="filter-card">
+      <h3>Filtrar por fecha</h3>
+      <div class="filter-row">
+        <div class="filter-group">
+          <label for="fechaDesde">Desde</label>
+          <input type="date" id="fechaDesde">
+        </div>
+        <div class="filter-group">
+          <label for="fechaHasta">Hasta</label>
+          <input type="date" id="fechaHasta">
+        </div>
+        <button class="filter-apply-btn" onclick="aplicarFiltro()">Aplicar</button>
+      </div>
+      <div class="quick-filters">
+        <button class="qf-btn" onclick="setQuickFilter('hoy', this)">Hoy</button>
+        <button class="qf-btn" onclick="setQuickFilter('semana', this)">Esta semana</button>
+        <button class="qf-btn" onclick="setQuickFilter('mes', this)">Este mes</button>
+        <button class="qf-btn" onclick="setQuickFilter('todo', this)">Todo</button>
+      </div>
+    </div>
+
+    <!-- Dynamic report content -->
+    <div id="reportContent">
+      <div class="report-loading">
+        <div class="spinner"></div>
+        <span>Cargando ventas...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = "https://script.google.com/macros/s/AKfycbzToXXl84KE5kxx7ZFAinfiwdtNjQCWMVoy-SNAPT1ikvHsDpFnlqGDTYZ_7rxbc3Gb/exec";
-            //"https://script.google.com/macros/s/AKfycbxueSjY0Ody_qgkec-1aUP2CAW8AdGeO-P-Glr-mf6t5R_NhB1UUbwDYOXR4iyFrP81pw/exec";
-            //"https://script.google.com/macros/s/AKfycbwvSHYSnp-NPtcg5NH0y-mNKL5v2ul40txzW-p_gPF9vdzkkCUG19Cf2FwR0PMnBQRU2w/exec";
-            //"https://script.google.com/macros/s/AKfycbwj0kMoWuN4YWIzxlCbec-hg28R_BblAqXTpyJ8xbLaeBscHMre4de3cP5eQ5sOB2H-5w/exec";
-            //"https://script.google.com/macros/s/AKfycbzdFU_ltm0LyBSekpx4OYoiZgAsUsGpFH2lfik6e0Ob5o5ajmJFvNSAm57Ys82jbsICAQ/exec";
 
 let productos = [];
 let carrito = [];
@@ -839,7 +1228,6 @@ async function cargarProductos() {
 
     if (!localTs || localTs !== serverTs || productos.length == 0) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
-      //productos = list.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
       productos = data.sort((a, b) =>
         a.nombre.trim().localeCompare(b.nombre.trim(), "es", {
           sensitivity: "base"
@@ -975,9 +1363,7 @@ function openDrawer() {
   drawerOpen = true;
   document.getElementById("drawer").classList.add("open");
   document.getElementById("overlay").classList.add("open");
-
-  document.body.style.overflow = "hidden"; // 👈 IMPORTANTE
-  
+  document.body.style.overflow = "hidden";
   renderCartItems();
   updateDrawerTotal();
 }
@@ -986,8 +1372,7 @@ function closeDrawer() {
   drawerOpen = false;
   document.getElementById("drawer").classList.remove("open");
   document.getElementById("overlay").classList.remove("open");
-
-  document.body.style.overflow = ""; // 👈 restaurar
+  document.body.style.overflow = "";
 }
 
 function renderCartItems() {
@@ -1086,13 +1471,6 @@ async function pagar(metodo) {
   setPayBtnsDisabled(true);
 
   try {
-    //await fetch(API + "?action=venta&data=" + encodeURIComponent(JSON.stringify(venta)));
-    /*
-    await fetch(API, {
-      method: "POST",
-      body: JSON.stringify( { action: "venta", venta } ),
-    });
-    */
     await fetch(API, {
       method: "POST",
       headers: {
@@ -1151,99 +1529,290 @@ function refreshSearch() {
   else renderProductos();
 }
 
-/* ========== DRAG TO CLOSE DRAWER ========== */
-/*
-const drawer = document.getElementById("drawer");
-const handle = document.getElementById("drawerHandle");
-let startY = 0, dragging = false;
+/* ========== REPORTE ========== */
+let ventasCache = [];
+let reportChart = null;
+let activeQuickFilter = null;
 
-handle.addEventListener("touchstart", e => {
-  startY = e.touches[0].clientY;
-  dragging = true;
-  drawer.style.transition = "none";
-}, { passive: true });
-
-window.addEventListener("touchmove", e => {
-  if (!dragging) return;
-  const delta = e.touches[0].clientY - startY;
-  if (delta > 0) drawer.style.transform = `translateY(${delta}px)`;
-}, { passive: true });
-
-window.addEventListener("touchend", e => {
-  if (!dragging) return;
-  dragging = false;
-  drawer.style.transition = "";
-  const delta = e.changedTouches[0].clientY - startY;
-  if (delta > 100) closeDrawer();
-  else drawer.style.transform = "";
-});
-*/
-/* ========== DRAG TO CLOSE DRAWER (FIXED) ========== */
-/*
-const drawer = document.getElementById("drawer");
-const handle = document.getElementById("drawerHandle");
-
-let startY = 0;
-let currentY = 0;
-let dragging = false;
-
-handle.addEventListener("touchstart", (e) => {
-  if (!drawer.classList.contains("open")) return;
-
-  dragging = true;
-  startY = e.touches[0].clientY;
-  currentY = 0;
-
-  drawer.style.transition = "none";
-}, { passive: true });
-
-handle.addEventListener("touchmove", (e) => {
-  if (!dragging) return;
-
-  const y = e.touches[0].clientY;
-  const delta = y - startY;
-
-  // solo permitir bajar
-  if (delta > 0) {
-    currentY = delta;
-    drawer.style.transform = `translateY(${delta}px)`;
+function openReport() {
+  document.getElementById("reportPanel").classList.add("open");
+  if (ventasCache.length === 0) {
+    cargarVentas();
   }
-}, { passive: true });
-
-handle.addEventListener("touchend", () => {
-  if (!dragging) return;
-
-  dragging = false;
-  drawer.style.transition = "";
-
-  // si bajó lo suficiente, cerrar
-  if (currentY > 120) {
-    closeDrawer();
-  } else {
-    drawer.style.transform = "";
-  }
-
-  startY = 0;
-  currentY = 0;
-});
-*/
-/* ========== LIFECYCLE ========== */
-window.addEventListener("beforeunload", e => {
-  if (carrito.length > 0) {
-    e.preventDefault();
-    e.returnValue = "Tenés una venta en curso.";
-  }
-});
-
-window.addEventListener("offline", () => showToast("Sin conexión — modo offline activo", "error"));
-window.addEventListener("online",  () => showToast("Conexión restaurada", "success"));
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 
-cargarProductos();
+function closeReport() {
+  document.getElementById("reportPanel").classList.remove("open");
+}
+
+function toDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function setQuickFilter(tipo, btn) {
+  document.querySelectorAll(".qf-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeQuickFilter = tipo;
+
+  const hoy = new Date();
+  let desde, hasta;
+
+  if (tipo === "hoy") {
+    desde = hasta = toDateStr(hoy);
+  } else if (tipo === "semana") {
+    const lunes = new Date(hoy);
+    lunes.setDate(hoy.getDate() - hoy.getDay() + (hoy.getDay() === 0 ? -6 : 1));
+    desde = toDateStr(lunes);
+    hasta = toDateStr(hoy);
+  } else if (tipo === "mes") {
+    desde = toDateStr(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+    hasta = toDateStr(hoy);
+  } else {
+    desde = "";
+    hasta = "";
+  }
+
+  document.getElementById("fechaDesde").value = desde;
+  document.getElementById("fechaHasta").value = hasta;
+  renderReporte();
+}
+
+async function cargarVentas() {
+  const content = document.getElementById("reportContent");
+  content.innerHTML = `<div class="report-loading"><div class="spinner"></div><span>Cargando ventas...</span></div>`;
+  document.getElementById("reportSubtitle").textContent = "Actualizando...";
+
+  try {
+    const data = await fetch(API + "?action=reporte").then(r => r.json());
+    ventasCache = Array.isArray(data) ? data : [];
+    renderReporte();
+  } catch (e) {
+    content.innerHTML = `
+      <div class="report-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        <p>No se pudo cargar el reporte.<br>Verificá tu conexión e intentá nuevamente.</p>
+      </div>`;
+    document.getElementById("reportSubtitle").textContent = "Error al cargar";
+  }
+}
+
+function aplicarFiltro() {
+  document.querySelectorAll(".qf-btn").forEach(b => b.classList.remove("active"));
+  activeQuickFilter = null;
+  renderReporte();
+}
+
+function parseFecha(val) {
+  if (!val) return null;
+  if (val instanceof Date) return val;
+  const s = String(val);
+  const d = new Date(s);
+  if (!isNaN(d)) return d;
+  const parts = s.split(/[\/\-\.]/);
+  if (parts.length === 3) {
+    if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+  }
+  return null;
+}
+
+function renderReporte() {
+  const desde = document.getElementById("fechaDesde").value;
+  const hasta = document.getElementById("fechaHasta").value;
+
+  let ventas = ventasCache;
+
+  if (desde || hasta) {
+    ventas = ventas.filter(v => {
+      const f = parseFecha(v.fecha);
+      if (!f) return false;
+      const fs = toDateStr(f);
+      if (desde && fs < desde) return false;
+      if (hasta && fs > hasta) return false;
+      return true;
+    });
+  }
+
+  // Exclude discounts from product stats (negative totals)
+  const ventasProductos = ventas.filter(v => v.total >= 0 && !String(v.nombre).toLowerCase().startsWith("descuento"));
+
+  const content = document.getElementById("reportContent");
+
+  if (ventas.length === 0 && ventasCache.length > 0) {
+    content.innerHTML = `
+      <div class="report-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <p>No hay ventas en el período seleccionado.</p>
+      </div>`;
+    updateSubtitle(ventas, desde, hasta);
+    return;
+  }
+
+  if (ventasCache.length === 0) {
+    content.innerHTML = `
+      <div class="report-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h2l.4 2"/><path d="M7 13h10l4-8H5.4"/><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+        <p>Sin datos de ventas aún.</p>
+      </div>`;
+    document.getElementById("reportSubtitle").textContent = "Sin ventas registradas";
+    return;
+  }
+
+  // Aggregate
+  const totalVentas = ventasProductos.reduce((s, v) => s + (parseFloat(v.total) || 0), 0);
+  const totalItems = ventasProductos.reduce((s, v) => s + (parseInt(v.cantidad) || 0), 0);
+  const efectivo = ventas.filter(v => String(v.metodo).toLowerCase() === "efectivo").reduce((s, v) => s + Math.max(parseFloat(v.total) || 0, 0), 0);
+  const transacciones = new Set(ventas.map(v => v.fecha + "_" + v.metodo)).size;
+
+  // Product totals
+  const prodMap = {};
+  ventasProductos.forEach(v => {
+    const n = v.nombre || "Desconocido";
+    if (!prodMap[n]) prodMap[n] = { cantidad: 0, total: 0 };
+    prodMap[n].cantidad += parseInt(v.cantidad) || 0;
+    prodMap[n].total += parseFloat(v.total) || 0;
+  });
+
+  const topProductos = Object.entries(prodMap)
+    .sort((a, b) => b[1].cantidad - a[1].cantidad)
+    .slice(0, 10);
+
+  updateSubtitle(ventas, desde, hasta);
+
+  content.innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-card green">
+        <div class="summary-label">Total vendido</div>
+        <div class="summary-value">${fmt(totalVentas)}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Unidades</div>
+        <div class="summary-value">${totalItems.toLocaleString("es-UY")}</div>
+      </div>
+      <div class="summary-card blue">
+        <div class="summary-label">Efectivo</div>
+        <div class="summary-value">${fmt(efectivo)}</div>
+      </div>
+      <div class="summary-card purple">
+        <div class="summary-label">Transacciones</div>
+        <div class="summary-value">${transacciones}</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Productos más vendidos (por unidades)</h3>
+      <div class="chart-wrap">
+        <canvas id="reportChartCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>Detalle de ventas (${ventas.length} registros)</h3>
+      ${renderTablaVentas(ventas)}
+    </div>
+  `;
+
+  renderChart(topProductos);
+}
+
+function updateSubtitle(ventas, desde, hasta) {
+  const sub = document.getElementById("reportSubtitle");
+  if (!desde && !hasta) {
+    sub.textContent = `${ventas.length} registros en total`;
+  } else if (desde && hasta) {
+    sub.textContent = `${desde} — ${hasta} · ${ventas.length} registros`;
+  } else if (desde) {
+    sub.textContent = `Desde ${desde} · ${ventas.length} registros`;
+  } else {
+    sub.textContent = `Hasta ${hasta} · ${ventas.length} registros`;
+  }
+}
+
+function renderTablaVentas(ventas) {
+  if (ventas.length === 0) return `<div class="report-empty"><p>Sin registros.</p></div>`;
+
+  const rows = ventas.slice(0, 200).map(v => {
+    const fecha = parseFecha(v.fecha);
+    const fechaStr = fecha ? fecha.toLocaleDateString("es-UY") : (v.fecha || "-");
+    const metodo = String(v.metodo || "").toLowerCase();
+    const badgeClass = metodo === "efectivo" ? "badge-efectivo" : metodo === "debito" ? "badge-debito" : metodo === "credito" ? "badge-credito" : "";
+    return `<tr>
+      <td>${fechaStr}</td>
+      <td>${v.nombre || "-"}</td>
+      <td style="text-align:center">${v.cantidad || "-"}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:600">${v.total != null ? fmt(parseFloat(v.total)) : "-"}</td>
+      <td><span class="badge-metodo ${badgeClass}">${v.metodo || "-"}</span></td>
+    </tr>`;
+  }).join("");
+
+  return `<table class="sales-table">
+    <thead><tr>
+      <th>Fecha</th><th>Producto</th><th style="text-align:center">Cant.</th><th>Total</th><th>Método</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>${ventas.length > 200 ? `<p style="text-align:center;font-size:12px;color:var(--muted-fg);padding:8px 0">Mostrando primeros 200 de ${ventas.length} registros</p>` : ""}`;
+}
+
+function renderChart(topProductos) {
+  if (reportChart) {
+    reportChart.destroy();
+    reportChart = null;
+  }
+
+  const canvas = document.getElementById("reportChartCanvas");
+  if (!canvas || topProductos.length === 0) return;
+
+  const labels = topProductos.map(([name]) => name.length > 20 ? name.slice(0, 18) + "…" : name);
+  const data = topProductos.map(([, d]) => d.cantidad);
+
+  const colors = [
+    "#2563eb","#10b981","#8b5cf6","#f59e0b","#ef4444",
+    "#06b6d4","#ec4899","#84cc16","#f97316","#6366f1"
+  ];
+
+  reportChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Unidades vendidas",
+        data,
+        backgroundColor: colors.slice(0, data.length),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y} unidades`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: "Inter", size: 11 }, color: "#64748b" }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: "#e2e8f0" },
+          ticks: { font: { family: "Inter", size: 11 }, color: "#64748b", stepSize: 1 }
+        }
+      }
+    }
+  });
+}
+
+/* ========== INIT ========== */
 loadCart();
+cargarProductos();
 </script>
 </body>
 </html>
