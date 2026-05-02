@@ -2101,14 +2101,13 @@ async function pagar(metodo) {
   setPayBtnsDisabled(true);
 
   try {
-    const deviceId = getDeviceId();
+    //const deviceId = getDeviceId();
     await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "data=" + encodeURIComponent(JSON.stringify({
         action: "venta",
         token: POSTOKEN,
-        deviceId: deviceId,
         ...venta
       }))
     });
