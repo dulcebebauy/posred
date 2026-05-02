@@ -1133,6 +1133,7 @@ function refreshSearch() {
 }
 
 /* ========== DRAG TO CLOSE DRAWER ========== */
+/*
 const drawer = document.getElementById("drawer");
 const handle = document.getElementById("drawerHandle");
 let startY = 0, dragging = false;
@@ -1157,7 +1158,54 @@ window.addEventListener("touchend", e => {
   if (delta > 100) closeDrawer();
   else drawer.style.transform = "";
 });
+*/
+/* ========== DRAG TO CLOSE DRAWER (FIXED) ========== */
+const drawer = document.getElementById("drawer");
+const handle = document.getElementById("drawerHandle");
 
+let startY = 0;
+let currentY = 0;
+let dragging = false;
+
+handle.addEventListener("touchstart", (e) => {
+  if (!drawer.classList.contains("open")) return;
+
+  dragging = true;
+  startY = e.touches[0].clientY;
+  currentY = 0;
+
+  drawer.style.transition = "none";
+}, { passive: true });
+
+handle.addEventListener("touchmove", (e) => {
+  if (!dragging) return;
+
+  const y = e.touches[0].clientY;
+  const delta = y - startY;
+
+  // solo permitir bajar
+  if (delta > 0) {
+    currentY = delta;
+    drawer.style.transform = `translateY(${delta}px)`;
+  }
+}, { passive: true });
+
+handle.addEventListener("touchend", () => {
+  if (!dragging) return;
+
+  dragging = false;
+  drawer.style.transition = "";
+
+  // si bajó lo suficiente, cerrar
+  if (currentY > 120) {
+    closeDrawer();
+  } else {
+    drawer.style.transform = "";
+  }
+
+  startY = 0;
+  currentY = 0;
+});
 /* ========== LIFECYCLE ========== */
 window.addEventListener("beforeunload", e => {
   if (carrito.length > 0) {
