@@ -377,10 +377,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px 12px;
+  padding: 18px 16px 12px; /* 👈 más aire arriba */
   border-bottom: 1px solid var(--border);
+  position: relative;
 }
-
+.drawer-head::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border);
+  opacity: 0.6;
+}
 .drawer-title { font-size: 20px; font-weight: 800; }
 
 .icon-btn {
