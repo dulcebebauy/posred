@@ -1630,7 +1630,7 @@ async function cargarVentas() {
   document.getElementById("reportSubtitle").textContent = "Actualizando...";
 
   try {
-    const data = await fetch(API + "?action=ventas").then(r => r.json());
+    const data = await fetch(API + "?action=reporte").then(r => r.json());
     ventasCache = Array.isArray(data) ? data : [];
     renderReporte();
   } catch (e) {
