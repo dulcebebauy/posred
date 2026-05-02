@@ -1729,7 +1729,7 @@ const POSTOKEN = "pos_123";
 
 function checkSession() {
   return localStorage.getItem("session") === "active" 
-        && ((localStorage.getItem("user")!= null || localStorage.getItem("user") != "") && (localStorage.getItem("pass") != null || localStorage.getItem("pass") != ""));
+        && ((localStorage.getItem("user")!= null && localStorage.getItem("user") != "") && (localStorage.getItem("pass") != null && localStorage.getItem("pass") != ""));
 }
 
 function doLogin() {
