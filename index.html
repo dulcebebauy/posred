@@ -731,7 +731,7 @@ body {
 </button>
 
 <!-- Overlay -->
-<!--<div class="overlay" id="overlay" onclick="closeDrawer()"></div>-->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
 
 <!-- Drawer -->
 <div class="drawer" id="drawer">
@@ -740,10 +740,9 @@ body {
   </div>
   <div class="drawer-head">
     <span class="drawer-title">Carrito</span>
-    <!--<button class="icon-btn" onclick="closeDrawer()">
+    <button class="icon-btn" onclick="closeDrawer()">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
     </button>
-    -->
   </div>
 
   <div class="drawer-items" id="drawerItems">
@@ -1161,6 +1160,7 @@ window.addEventListener("touchend", e => {
 });
 */
 /* ========== DRAG TO CLOSE DRAWER (FIXED) ========== */
+/*
 const drawer = document.getElementById("drawer");
 const handle = document.getElementById("drawerHandle");
 
@@ -1207,6 +1207,7 @@ handle.addEventListener("touchend", () => {
   startY = 0;
   currentY = 0;
 });
+*/
 /* ========== LIFECYCLE ========== */
 window.addEventListener("beforeunload", e => {
   if (carrito.length > 0) {
