@@ -1722,7 +1722,7 @@ body {
 
 <script>
 const API = "https://script.google.com/macros/s/AKfycbxjsaOM3eUsfKxkHRWNBXXrlfsNW9vM2W1A7k9Euk5Z2NXWMjtPVXgach1-m2CtfsIH/exec";
-const POSTOKEN = "pos_123";
+const POSTOKEN = localStorage.getItem("user") + "_" + localStorage.getItem("pass");//"pos_123";
 
 /* ========== AUTH ========== */
 
