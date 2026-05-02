@@ -825,7 +825,12 @@ async function cargarProductos() {
 
     //if (!localTs || localTs !== serverTs) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
-      productos = list.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+      //productos = list.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+      productos.sort((a, b) =>
+        a.nombre.trim().localeCompare(b.nombre.trim(), "es", {
+          sensitivity: "base"
+        })
+      );
       renderProductos();
       localStorage.setItem("productos", JSON.stringify(productos));
       localStorage.setItem("productos_timestamp", serverTs);
