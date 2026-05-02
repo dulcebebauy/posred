@@ -823,7 +823,7 @@ async function cargarProductos() {
     const tsData = await fetch(API + "?action=timestamp").then(r => r.json());
     const serverTs = String(tsData.timestamp);
 
-    //if (!localTs || localTs !== serverTs) {
+    if (!localTs || localTs !== serverTs) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
       //productos = list.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
       productos = data.sort((a, b) =>
@@ -834,7 +834,7 @@ async function cargarProductos() {
       renderProductos();
       localStorage.setItem("productos", JSON.stringify(productos));
       localStorage.setItem("productos_timestamp", serverTs);
-    //}
+    }
   } catch {
     if (!cache) {
       document.getElementById("stateCenter").innerHTML =
