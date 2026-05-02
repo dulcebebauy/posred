@@ -7,11 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.json">
 <title>POS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
@@ -52,6 +52,135 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* ===== LOGIN ===== */
+#loginScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 32px 32px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.login-logo-icon {
+  width: 44px;
+  height: 44px;
+  /*background: var(--primary);*/
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.login-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--fg);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.login-sub {
+  font-size: 13px;
+  color: var(--muted-fg);
+  text-align: center;
+  margin-top: -12px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login-field label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-fg);
+}
+
+.login-field input {
+  height: 46px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 0 14px;
+  background: var(--muted);
+  color: var(--fg);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+.login-field input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  background: var(--surface);
+}
+
+.login-field input.invalid {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+
+.login-error {
+  font-size: 13px;
+  color: var(--red);
+  font-weight: 500;
+  text-align: center;
+  min-height: 18px;
+}
+
+.login-btn {
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  background: var(--primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.login-btn:hover { filter: brightness(1.08); }
+.login-btn:active { transform: scale(0.98); }
 
 /* ===== HEADER ===== */
 .header {
@@ -155,6 +284,32 @@ body {
   100% { transform: scale(1); }
 }
 
+/* ===== LOGOUT BUTTON ===== */
+.logout-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--muted);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--muted-fg);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+}
+
+.logout-btn:hover {
+  background: #fee2e2;
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+
+.logout-btn:active { transform: scale(0.97); }
+
 /* ===== REPORT BUTTON ===== */
 .report-btn {
   flex-shrink: 0;
@@ -223,7 +378,6 @@ body {
 }
 
 .card:active { transform: scale(0.97); box-shadow: none; }
-
 .card.in-cart { border-color: var(--primary); }
 
 .card-qty {
@@ -285,8 +439,8 @@ body {
 
 .card-emoji {
   position: absolute;
-  top: 6px;
-  right: 7px;
+  top: 34px;
+  /*right: 7px;*/
   font-size: 20px;
   line-height: 1;
   pointer-events: none;
@@ -396,25 +550,7 @@ body {
   touch-action: none;
 }
 
-.drawer.open {
-  transform: translateY(0);
-}
-
-.drawer-handle-area {
-  flex-shrink: 0;
-  padding: 12px 16px 0;
-  touch-action: none;
-  cursor: grab;
-  display: none;
-}
-
-.drawer-handle {
-  width: 40px;
-  height: 5px;
-  background: var(--border);
-  border-radius: 3px;
-  margin: 0 auto 12px;
-}
+.drawer.open { transform: translateY(0); }
 
 .drawer-head {
   display: flex;
@@ -424,6 +560,7 @@ body {
   border-bottom: 1px solid var(--border);
   position: relative;
 }
+
 .drawer-head::before {
   content: "";
   position: absolute;
@@ -436,6 +573,7 @@ body {
   background: var(--border);
   opacity: 0.6;
 }
+
 .drawer-title { font-size: 20px; font-weight: 800; }
 
 .icon-btn {
@@ -758,9 +896,7 @@ body {
   will-change: transform;
 }
 
-.report-panel.open {
-  transform: translateX(0);
-}
+.report-panel.open { transform: translateX(0); }
 
 .report-header {
   flex-shrink: 0;
@@ -786,10 +922,7 @@ body {
   padding-left: 2px;
 }
 
-.report-header-titles {
-  flex: 1;
-  min-width: 0;
-}
+.report-header-titles { flex: 1; min-width: 0; }
 
 .report-header-title {
   font-size: 18px;
@@ -815,7 +948,6 @@ body {
   gap: 16px;
 }
 
-/* Filter card */
 .filter-card {
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -894,7 +1026,6 @@ body {
 .filter-apply-btn:hover { filter: brightness(1.08); }
 .filter-apply-btn:active { transform: scale(0.97); }
 
-/* Quick date filters */
 .quick-filters {
   display: flex;
   gap: 6px;
@@ -922,7 +1053,6 @@ body {
   color: white;
 }
 
-/* Summary cards */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -962,7 +1092,6 @@ body {
 .summary-card.blue  .summary-value { color: var(--blue); }
 .summary-card.purple .summary-value { color: var(--purple); }
 
-/* Chart card */
 .chart-card {
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -980,12 +1109,8 @@ body {
   margin-bottom: 14px;
 }
 
-.chart-wrap {
-  position: relative;
-  width: 100%;
-}
+.chart-wrap { position: relative; width: 100%; }
 
-/* Sales table */
 .table-card {
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -1032,7 +1157,6 @@ body {
 }
 
 .sales-table tr:last-child td { border-bottom: none; }
-
 .sales-table tr:hover td { background: var(--muted); }
 
 .badge-metodo {
@@ -1090,22 +1214,11 @@ body {
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
 }
 
-.backup-btn:hover {
-  background: #ecfdf5;
-  border-color: var(--green);
-  color: var(--green);
-}
-
+.backup-btn:hover { background: #ecfdf5; border-color: var(--green); color: var(--green); }
 .backup-btn:active { transform: scale(0.97); }
-
-.backup-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
+.backup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .backup-btn.loading svg.icon-backup { display: none; }
 .backup-btn:not(.loading) svg.icon-spin { display: none; }
-
 @keyframes spin-btn { to { transform: rotate(360deg); } }
 .backup-btn.loading svg.icon-spin { animation: spin-btn 0.7s linear infinite; }
 
@@ -1147,10 +1260,7 @@ body {
   transition: opacity 0.25s ease;
 }
 
-.modal-overlay.open {
-  opacity: 1;
-  pointer-events: all;
-}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
 
 .modal {
   background: var(--surface);
@@ -1165,9 +1275,7 @@ body {
   box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
 }
 
-.modal-overlay.open .modal {
-  transform: translateY(0);
-}
+.modal-overlay.open .modal { transform: translateY(0); }
 
 .modal-head {
   display: flex;
@@ -1201,11 +1309,7 @@ body {
   gap: 14px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
 
 .form-group label {
   font-size: 12px;
@@ -1251,10 +1355,7 @@ body {
 }
 
 .form-group input.invalid,
-.form-group select.invalid {
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
-}
+.form-group select.invalid { border-color: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
 
 .category-grid {
   display: grid;
@@ -1262,9 +1363,7 @@ body {
   gap: 7px;
 }
 
-.cat-option {
-  display: none;
-}
+.cat-option { display: none; }
 
 .cat-label {
   display: flex;
@@ -1282,12 +1381,7 @@ body {
   user-select: none;
 }
 
-.cat-label .cat-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
+.cat-label .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
 .cat-option:checked + .cat-label {
   border-color: var(--primary);
@@ -1341,13 +1435,55 @@ body {
 .modal-save-btn:hover { filter: brightness(1.08); }
 .modal-save-btn:active { transform: scale(0.97); }
 .modal-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
 .modal-save-btn svg.icon-spin-save { display: none; }
 .modal-save-btn.loading svg.icon-spin-save { display: block; animation: spin-btn 0.7s linear infinite; }
 .modal-save-btn.loading span.save-label { display: none; }
 </style>
 </head>
 <body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <img src="icon-192.png" style="width: 200%;"/>
+        <!--
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+        </svg>
+        -->
+      </div>
+    </div>
+    <div class="login-title">POS</div>
+    <p class="login-sub">Ingresá tus credenciales para continuar</p>
+
+    <div class="login-field">
+      <label for="loginUser">Usuario</label>
+      <input type="text" id="loginUser" placeholder="Usuario" autocomplete="username" autocapitalize="none">
+    </div>
+
+    <div class="login-field">
+      <label for="loginPass">Contraseña</label>
+      <input type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password">
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+
+    <button class="login-btn" onclick="doLogin()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Ingresar
+    </button>
+  </div>
+</div>
+
+<!-- ===== POS APP ===== -->
+<div id="posApp" style="display:none;flex-direction:column;height:100%;">
 
 <!-- Payment loader -->
 <div class="pay-loader hidden" id="payLoader">
@@ -1360,12 +1496,26 @@ body {
 
 <!-- Header -->
 <header class="header">
+  <!-- Logout button (icon only) to the LEFT of report button -->
+  <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+  </button>
+
   <button class="report-btn" onclick="openReport()" title="Reporte de ventas">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
       <path d="M2 20h20"/>
     </svg>
-    Reporte
+  </button>
+  <button class="report-btn" onclick="cargarProductos(true)" title="Recargar productos">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+      <path d="M21 3v5h-5"/>
+    </svg>
   </button>
   <div class="search-wrap">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -1374,6 +1524,7 @@ body {
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
     </button>
   </div>
+
   <div class="total-box">
     <span class="total-label">Total</span>
     <div class="total-amount" id="totalAmount">$0</div>
@@ -1400,9 +1551,6 @@ body {
 
 <!-- Drawer -->
 <div class="drawer" id="drawer">
-  <div class="drawer-handle-area" id="drawerHandle">
-    <div class="drawer-handle"></div>
-  </div>
   <div class="drawer-head">
     <span class="drawer-title">Carrito</span>
     <button class="icon-btn" onclick="closeDrawer()">
@@ -1463,7 +1611,7 @@ body {
     <div class="report-header-row2">
       <button class="add-product-btn" onclick="openProductModal()" title="Agregar producto a la carta">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-        + Producto
+        Producto
       </button>
       <button class="backup-btn" id="backupBtn" onclick="generarRespaldo()" title="Generar respaldo en Google Drive">
         <svg class="icon-backup" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1477,7 +1625,6 @@ body {
   </div>
 
   <div class="report-body" id="reportBody">
-    <!-- Filter card -->
     <div class="filter-card">
       <h3>Filtrar por fecha</h3>
       <div class="filter-row">
@@ -1499,7 +1646,6 @@ body {
       </div>
     </div>
 
-    <!-- Dynamic report content -->
     <div id="reportContent">
       <div class="report-loading">
         <div class="spinner"></div>
@@ -1540,45 +1686,31 @@ body {
         <div class="category-grid">
           <label>
             <input type="radio" name="prodCategoria" class="cat-option" value="bebidas_calientes" id="catBC">
-            <span class="cat-label" for="catBC">
-              <span class="cat-dot" style="background:#f97316"></span>Bebidas calientes
-            </span>
+            <span class="cat-label"><span class="cat-dot" style="background:#f97316"></span>Bebidas calientes</span>
           </label>
           <label>
             <input type="radio" name="prodCategoria" class="cat-option" value="bebidas_frias" id="catBF">
-            <span class="cat-label" for="catBF">
-              <span class="cat-dot" style="background:#06b6d4"></span>Bebidas frías
-            </span>
+            <span class="cat-label"><span class="cat-dot" style="background:#06b6d4"></span>Bebidas frías</span>
           </label>
           <label>
             <input type="radio" name="prodCategoria" class="cat-option" value="dulces" id="catDu">
-            <span class="cat-label" for="catDu">
-              <span class="cat-dot" style="background:#ec4899"></span>Dulces
-            </span>
+            <span class="cat-label"><span class="cat-dot" style="background:#ec4899"></span>Dulces</span>
           </label>
           <label>
             <input type="radio" name="prodCategoria" class="cat-option" value="postres" id="catPo">
-            <span class="cat-label" for="catPo">
-              <span class="cat-dot" style="background:#8b5cf6"></span>Postres
-            </span>
+            <span class="cat-label"><span class="cat-dot" style="background:#8b5cf6"></span>Postres</span>
           </label>
           <label>
             <input type="radio" name="prodCategoria" class="cat-option" value="salados" id="catSa">
-            <span class="cat-label" for="catSa">
-              <span class="cat-dot" style="background:#84cc16"></span>Salados
-            </span>
+            <span class="cat-label"><span class="cat-dot" style="background:#84cc16"></span>Salados</span>
           </label>
           <label>
             <input type="radio" name="prodCategoria" class="cat-option" value="tortas" id="catTo">
-            <span class="cat-label" for="catTo">
-              <span class="cat-dot" style="background:#f59e0b"></span>Tortas
-            </span>
+            <span class="cat-label"><span class="cat-dot" style="background:#f59e0b"></span>Tortas</span>
           </label>
           <label>
             <input type="radio" name="prodCategoria" class="cat-option" value="meriendas" id="catMe">
-            <span class="cat-label" for="catMe">
-              <span class="cat-dot" style="background:#10b981"></span>Meriendas
-            </span>
+            <span class="cat-label"><span class="cat-dot" style="background:#10b981"></span>Meriendas</span>
           </label>
         </div>
       </div>
@@ -1594,17 +1726,91 @@ body {
   </div>
 </div>
 
-<script>
-const API = "https://script.google.com/macros/s/AKfycbyAq8_nre4uTywjzK0gNKkIc3hL8rjGq2jzCl5gGAq-jowdMJoKD2pGjZ9apJjJdlng/exec";
-            //"https://script.google.com/macros/s/AKfycbzhI9oBjiBNzmAD-vb6Kxk74bR5zFrNuvlIwX2T65cyAT4-psR1Hg0sUqRJJK4WA__tUA/exec";
-            //"https://script.google.com/macros/s/AKfycbz14I0lfs1YKCQumpEgYSZ4G8zoeGK5veI6cU1j8DE7cWZdo_Xz3sauRAC839NagcLO5w/exec";
-            //"https://script.google.com/macros/s/AKfycbzToXXl84KE5kxx7ZFAinfiwdtNjQCWMVoy-SNAPT1ikvHsDpFnlqGDTYZ_7rxbc3Gb/exec";
-const POSTOKEN = "pos_123";
+</div><!-- end #posApp -->
 
-let productos = [];
-let carrito = [];
-let drawerOpen = false;
-let currentDiscount = 0;
+<script>
+const API = "https://script.google.com/macros/s/AKfycbxOTqH5t1J3Kfsc7EwVtTfSJiYFt_Fhj_RXWKVJCo9Dg7laloh5kTJqgqPIE4Bj09DG/exec";
+            //"https://script.google.com/macros/s/AKfycbxjsaOM3eUsfKxkHRWNBXXrlfsNW9vM2W1A7k9Euk5Z2NXWMjtPVXgach1-m2CtfsIH/exec";
+const POSTOKEN = localStorage.getItem("user") + "_" + localStorage.getItem("pass");//"pos_123";
+
+/* ========== AUTH ========== */
+
+
+function checkSession() {
+  return localStorage.getItem("session") === "active" 
+        && ((localStorage.getItem("user")!= null && localStorage.getItem("user") != "") && (localStorage.getItem("pass") != null && localStorage.getItem("pass") != ""));
+}
+
+function doLogin() {
+  const userInput = document.getElementById("loginUser").value.trim();
+  const passInput = document.getElementById("loginPass").value;
+  const errorEl = document.getElementById("loginError");
+
+  errorEl.textContent = "";
+
+  if (!userInput) {
+    document.getElementById("loginUser").classList.add("invalid");
+    errorEl.textContent = "Ingresá el usuario.";
+    return;
+  }
+
+  if (!passInput) {
+    document.getElementById("loginPass").classList.add("invalid");
+    errorEl.textContent = "Ingresá la contraseña.";
+    return;
+  }
+
+  // Save credentials to localStorage and start session
+  localStorage.setItem("user", userInput);
+  localStorage.setItem("pass", passInput);
+  localStorage.setItem("session", "active");
+  showPOS();
+  loadCart();
+  cargarProductos();
+}
+
+function doLogout() {
+  if (!confirm("¿Cerrar sesión?")) return;
+  localStorage.removeItem("session");
+  localStorage.removeItem("user");
+  localStorage.removeItem("pass");
+  showLogin();
+}
+
+function showLogin() {
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("posApp").style.display = "none";
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+  document.getElementById("loginError").textContent = "";
+}
+
+function showPOS() {
+  document.getElementById("loginScreen").style.display = "none";
+  const posApp = document.getElementById("posApp");
+  posApp.style.display = "flex";
+  posApp.style.flexDirection = "column";
+  posApp.style.height = "100%";
+}
+
+// Allow pressing Enter on login fields
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("loginUser").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") document.getElementById("loginPass").focus();
+  });
+  document.getElementById("loginPass").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") doLogin();
+  });
+
+  // Check if already logged in
+  if (checkSession()) {
+    showPOS();
+    loadCart();
+    cargarProductos();
+  } else {
+    showLogin();
+  }
+});
 
 /* ========== CATEGORY EMOJI ========== */
 const CATEGORY_EMOJI = {
@@ -1636,11 +1842,16 @@ function showToast(msg, type = "success") {
 }
 
 /* ========== PRODUCTOS ========== */
-async function cargarProductos() {
+let productos = [];
+let carrito = [];
+let drawerOpen = false;
+let currentDiscount = 0;
+
+async function cargarProductos( force = false) {
   const cache = localStorage.getItem("productos");
   const localTs = localStorage.getItem("productos_timestamp");
 
-  if (cache) {
+  if (cache && !force) {
     productos = JSON.parse(cache);
     renderProductos();
   }
@@ -1652,9 +1863,7 @@ async function cargarProductos() {
     if (!localTs || localTs !== serverTs || productos.length == 0) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
       productos = data.sort((a, b) =>
-        a.nombre.trim().localeCompare(b.nombre.trim(), "es", {
-          sensitivity: "base"
-        })
+        a.nombre.trim().localeCompare(b.nombre.trim(), "es", { sensitivity: "base" })
       );
       renderProductos();
       localStorage.setItem("productos", JSON.stringify(productos));
@@ -1692,7 +1901,7 @@ function renderProductos(lista = productos) {
     div.innerHTML = `
       ${emoji ? `<div class="card-emoji">${emoji}</div>` : ""}
       ${qty > 0 ? `<div class="card-qty">${qty}</div>` : ""}
-      <div class="card-name">${p.nombre}</div>
+      <div class="card-name">${capitalizarTexto(p.nombre)}</div>
       <div class="card-bottom">
         <span class="card-price">${fmt(p.precio)}</span>
         <div class="card-btn">
@@ -1763,11 +1972,12 @@ function loadCart() {
 /* ========== TOTAL HEADER ========== */
 function updateTotal() {
   const subtotal = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
-  const discPct = parseFloat(document.getElementById("discount").value) || 0;
+  const discPct = parseFloat(document.getElementById("discount")?.value) || 0;
   currentDiscount = subtotal * Math.min(discPct, 100) / 100;
   const total = subtotal - currentDiscount;
 
   const el = document.getElementById("totalAmount");
+  if (!el) return;
   el.textContent = fmt(total);
   el.classList.toggle("active", total > 0);
   el.classList.remove("bump");
@@ -1839,13 +2049,16 @@ function renderCartItems() {
 }
 
 function updateDrawerTotal() {
+  const subtotalEl = document.getElementById("subtotalVal");
+  if (!subtotalEl) return;
+
   const subtotal = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
-  const discPct = parseFloat(document.getElementById("discount").value) || 0;
+  const discPct = parseFloat(document.getElementById("discount")?.value) || 0;
   const clampedPct = Math.min(Math.max(discPct, 0), 100);
   currentDiscount = subtotal * clampedPct / 100;
   const total = subtotal - currentDiscount;
 
-  document.getElementById("subtotalVal").textContent = fmt(subtotal);
+  subtotalEl.textContent = fmt(subtotal);
   document.getElementById("cartTotal").textContent = fmt(total);
 
   const discRow = document.getElementById("discountRow");
@@ -1858,14 +2071,17 @@ function updateDrawerTotal() {
   }
 
   const totalEl = document.getElementById("totalAmount");
-  totalEl.textContent = fmt(total);
-  totalEl.classList.toggle("active", total > 0);
+  if (totalEl) {
+    totalEl.textContent = fmt(total);
+    totalEl.classList.toggle("active", total > 0);
+  }
 }
 
 function updatePayButtons() {
   const disabled = carrito.length === 0;
   ["btnEfectivo", "btnDebito", "btnCredito", "clearBtn"].forEach(id => {
-    document.getElementById(id).disabled = disabled;
+    const el = document.getElementById(id);
+    if (el) el.disabled = disabled;
   });
 }
 
@@ -1878,7 +2094,8 @@ async function pagar(metodo) {
     nombre: i.nombre,
     cantidad: i.cantidad,
     precio: i.precio,
-    total: i.precio * i.cantidad
+    total: i.precio * i.cantidad,
+    id: i.id
   }));
 
   if (currentDiscount > 0) {
@@ -1896,17 +2113,23 @@ async function pagar(metodo) {
   setPayBtnsDisabled(true);
 
   try {
-    await fetch(API, {
+    //const deviceId = getDeviceId();
+    
+    const res = await fetch(API, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: "data=" + encodeURIComponent(JSON.stringify({
         action: "venta",
         token: POSTOKEN,
         ...venta
       }))
     });
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+    
     carrito = [];
     document.getElementById("discount").value = "";
     document.getElementById("discountDesc").value = "";
@@ -1936,11 +2159,27 @@ function setPayBtnsDisabled(v) {
 }
 
 /* ========== BUSCADOR ========== */
-function handleSearch() {
+/*
+  function handleSearch() {
   const val = document.getElementById("search").value;
   document.getElementById("search-clear").style.display = val ? "flex" : "none";
   const txt = val.toLowerCase();
   renderProductos(productos.filter(p => p.nombre.toLowerCase().includes(txt)));
+}
+*/
+function handleSearch() {
+  const input = document.getElementById("search").value;
+  //document.getElementById("search-clear").style.display = val ? "flex" : "none";
+  const texto = normalizarTexto(input);
+
+  const filtrados = productos.filter(p =>
+    normalizarTexto(p.nombre).includes(texto)
+  );
+
+  renderProductos(filtrados);
+
+  document.getElementById("search-clear").style.display =
+    input ? "block" : "none";
 }
 
 function clearSearch() {
@@ -2062,7 +2301,6 @@ function renderReporte() {
     });
   }
 
-  // Exclude discounts from product stats (negative totals)
   const ventasProductos = ventas.filter(v => v.total >= 0 && !String(v.nombre).toLowerCase().startsWith("descuento"));
 
   const content = document.getElementById("reportContent");
@@ -2087,13 +2325,11 @@ function renderReporte() {
     return;
   }
 
-  // Aggregate
   const totalVentas = ventasProductos.reduce((s, v) => s + (parseFloat(v.total) || 0), 0);
   const totalItems = ventasProductos.reduce((s, v) => s + (parseInt(v.cantidad) || 0), 0);
   const efectivo = ventas.filter(v => String(v.metodo).toLowerCase() === "efectivo").reduce((s, v) => s + Math.max(parseFloat(v.total) || 0, 0), 0);
   const transacciones = new Set(ventas.map(v => v.fecha + "_" + v.metodo)).size;
 
-  // Product totals
   const prodMap = {};
   ventasProductos.forEach(v => {
     const n = v.nombre || "Desconocido";
@@ -2335,9 +2571,21 @@ async function generarRespaldo() {
   }
 }
 
-/* ========== INIT ========== */
-loadCart();
-cargarProductos();
+/* ========== HELPER ========== */
+function normalizarTexto(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")                 // separa letras y tildes
+    .replace(/[\u0300-\u036f]/g, ""); // elimina tildes
+}
+function capitalizarTexto(str) {
+  return str
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(" ");
+}
 </script>
 </body>
 </html>
