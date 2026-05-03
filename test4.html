@@ -2763,6 +2763,7 @@ async function pagar(metodo) {
 
   if (currentDiscount > 0) {
     items.push({
+      id: "descuento",
       nombre: "Descuento - " + desc,
       cantidad: 1,
       precio: -currentDiscount,
