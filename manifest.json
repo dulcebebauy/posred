@@ -1,7 +1,7 @@
 {
   "name": "POS DulceBeba",
   "short_name": "POS",
-  "start_url": "/",
+  "start_url": ".",
   "id": "/",
   "display": "standalone",
   "background_color": "#f1f5f9",
