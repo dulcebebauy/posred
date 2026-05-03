@@ -3144,7 +3144,7 @@ async function guardarProducto() {
 
   try {
     const action = id ? "editarProducto" : "agregarProducto";
-    const payload = { action, nombre, descripcion, precio, categoria };
+    const payload = { action, token: POSTOKEN, nombre, descripcion, precio, categoria };
     if (id) payload.id = id;
 
     const res = await fetch(API, {
