@@ -1,7 +1,7 @@
 {
   "name": "POS DulceBeb AU",
   "short_name": "POS",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f1f5f9",
   "theme_color": "#1d4ed8",
