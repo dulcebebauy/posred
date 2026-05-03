@@ -3233,7 +3233,7 @@ async function guardarProducto() {
 
   try {
     const action = id ? "editarProducto" : "agregarProducto";
-    const payload = { action, nombre, descripcion, precio, categoria };
+    const payload = { action, token: POSTOKEN, nombre, descripcion, precio, categoria };
     if (id) payload.id = id;
 
     const res = await fetch(API, {
@@ -3270,7 +3270,7 @@ async function eliminarProducto() {
     const res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(JSON.stringify({ action: "eliminarProducto", id: editingProductId }))
+      body: "data=" + encodeURIComponent(JSON.stringify({ action: "eliminarProducto", token: POSTOKEN, id: editingProductId }))
     }).then(r => r.json());
 
     if (res.ok) {
