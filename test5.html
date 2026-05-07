@@ -1520,12 +1520,16 @@ function vibrar() {
   }
 }
 function playSuccessSound() {
+  if (navigator.vibrate) {
+    navigator.vibrate(200);
+  }
+
   const audio = document.getElementById("successSound");
   if (!audio) return;
 
   audio.currentTime = 0; // reinicia por si ya sonó antes
   audio.play().catch(() => {});
-  vibrar();
+  //vibrar();
 }
 </script>
 </body>
