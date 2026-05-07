@@ -530,8 +530,8 @@ async function cargarProductos(force = false) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
       productos = data.sort((a, b) => {
         // 1. Ordenar por ventas (mayor a menor)
-        if (b.cantidas_ventas !== a.cantidas_ventas) {
-          return b.cantidas_ventas - a.cantidas_ventas;
+        if (b.cantidad_ventas !== a.cantidad_ventas) {
+          return b.cantidad_ventas - a.cantidad_ventas;
         }
       
         // 2. Luego ordenar alfabéticamente por nombre
