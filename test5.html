@@ -1518,6 +1518,7 @@ function playSuccessSound() {
 
   audio.currentTime = 0; // reinicia por si ya sonó antes
   audio.play().catch(() => {});
+  navigator.vibrate(200);
 }
 </script>
 </body>
