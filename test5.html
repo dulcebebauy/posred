@@ -835,17 +835,27 @@ function abrirCambio(metodo) {
   document.getElementById("cambioResultVal").className = "cambio-result-val";
   document.getElementById("cambioPagarBtn").disabled = true;
 
-  // Quick amount buttons: redondeos útiles
   const quickBtns = document.getElementById("cambioQuickBtns");
   const redondeos = generarRedondeos(total);
+
   quickBtns.innerHTML = redondeos.map(v =>
     `<button class="cambio-quick-btn" onclick="setMontoRapido(${v})">${fmt(v)}</button>`
   ).join("");
 
+  // ✅ NUEVO: seleccionar automáticamente el menor
+  if (redondeos.length > 0) {
+    const menor = redondeos[0];
+    setMontoRapido(menor);
+
+    // opcional: marcar visualmente el botón
+    const btns = quickBtns.querySelectorAll(".cambio-quick-btn");
+    if (btns[0]) btns[0].classList.add("active");
+  }
+
   document.getElementById("cambioModalOverlay").classList.add("open");
   setTimeout(() => document.getElementById("cambioMonto").focus(), 200);
 }
-
+  
 function generarRedondeos(total) {
   const redondeos = [];
   const bases = [100, 200, 500, 1000, 2000, 5000, 10000];
@@ -858,9 +868,21 @@ function generarRedondeos(total) {
 
 function setMontoRapido(val) {
   document.getElementById("cambioMonto").value = val;
+
+  // limpiar selección previa
+  document.querySelectorAll(".cambio-quick-btn").forEach(b => b.classList.remove("active"));
+
+  // marcar el actual
+  const btns = document.querySelectorAll(".cambio-quick-btn");
+  btns.forEach(b => {
+    if (b.textContent === fmt(val)) {
+      b.classList.add("active");
+    }
+  });
+
   calcularCambio();
 }
-
+  
 function calcularCambio() {
   const total = calcularTotalActual();
   const monto = parseFloat(document.getElementById("cambioMonto").value) || 0;
