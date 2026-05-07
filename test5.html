@@ -17,6 +17,7 @@
 <script src="config.js"></script>
 <link rel="stylesheet" href="pos.css">
 </head>
+<audio id="successSound" src="success.mp3" preload="auto"></audio>  
 <body>
 
 <!-- ===== LOGIN ===== -->
@@ -975,6 +976,7 @@ async function pagar(metodo) {
     applyFilters();
     closeDrawer();
     showToast("Pago procesado (" + metodo + ")", "success");
+    playSuccessSound();
   } catch {
     showToast("Error al procesar el pago. Intente nuevamente.", "error");
   } finally {
@@ -1509,6 +1511,13 @@ function recargarProductos(force = false) {
   stateEl.style.display = "flex";
   stateEl.innerHTML = '<div class="spinner"></div>';
   cargarProductos(true);
+}
+function playSuccessSound() {
+  const audio = document.getElementById("successSound");
+  if (!audio) return;
+
+  audio.currentTime = 0; // reinicia por si ya sonó antes
+  audio.play().catch(() => {});
 }
 </script>
 </body>
