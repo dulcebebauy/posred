@@ -528,9 +528,20 @@ async function cargarProductos(force = false) {
 
     if (!localTs || localTs !== serverTs || productos.length == 0 || force) {
       const data = await fetch(API + "?action=productos").then(r => r.json());
+      productos = data.sort((a, b) => {
+        // 1. Ordenar por ventas (mayor a menor)
+        if (b.cantidas_ventas !== a.cantidas_ventas) {
+          return b.cantidas_ventas - a.cantidas_ventas;
+        }
+      
+        // 2. Luego ordenar alfabéticamente por nombre
+        return a.nombre.localeCompare(b.nombre, 'es');
+      });
+      /*
       productos = data.sort((a, b) =>
         a.nombre.trim().localeCompare(b.nombre.trim(), "es", { sensitivity: "base" })
       );
+      */
       applyFilters();
       localStorage.setItem("productos", JSON.stringify(productos));
       localStorage.setItem("productos_timestamp", serverTs);
