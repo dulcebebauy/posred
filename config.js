@@ -4,7 +4,7 @@ function getAPI( ambiente = "desa"){
   if(ambiente.lower() == "desa"){
     return API_DESA;
   }
-  if((ambiente.lower() == "prod"){
+  if(ambiente.lower() == "prod"){
     return API_PROD;
   }
   return false;
