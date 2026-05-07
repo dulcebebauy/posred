@@ -1512,13 +1512,20 @@ function recargarProductos(force = false) {
   stateEl.innerHTML = '<div class="spinner"></div>';
   cargarProductos(true);
 }
+function vibrar() {
+  if ("vibrate" in navigator) {
+    navigator.vibrate([300, 100, 300]);
+  } else {
+    alert("El dispositivo no soporta vibración");
+  }
+}
 function playSuccessSound() {
   const audio = document.getElementById("successSound");
   if (!audio) return;
 
   audio.currentTime = 0; // reinicia por si ya sonó antes
   audio.play().catch(() => {});
-  navigator.vibrate(200);
+  vibrar();
 }
 </script>
 </body>
