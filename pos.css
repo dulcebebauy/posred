@@ -1054,7 +1054,10 @@ body {
   border-color: var(--primary);
   color: var(--primary);
 }
-
+.cambio-quick-btn.active {
+  background: #1d4ed8;
+  color: white;
+}
 .cambio-result {
   background: var(--muted);
   border-radius: 10px;
