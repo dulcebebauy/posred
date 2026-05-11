@@ -535,7 +535,7 @@
 const SUPABASE_URL = "https://vrptuoncsmgtzwkoodee.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YiPcokZRtA-8fKkq8eMW9w_YCSnw84j";
 
-const supabase = window.supabase.createClient(
+const supabase_res = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
@@ -620,7 +620,7 @@ function showPOS() {
 ========================= */
 
 async function cargarProductosSupabase() {
-  const { data, error } = await supabase
+  const { data, error } = await supabase_res
     .from("productos")
     .select("*")
     .eq("activo", true)
@@ -636,7 +636,7 @@ async function cargarProductosSupabase() {
 }
 
 async function cargarMesasSupabase() {
-  const { data, error } = await supabase
+  const { data, error } = await supabase_res
     .from("mesas")
     .select("*")
     .order("numero");
@@ -660,7 +660,7 @@ async function guardarMesaSupabase(mesa) {
 
   const total = subtotal - descuento;
 
-  const { error } = await supabase
+  const { error } = await supabase_res
     .from("mesas")
     .update({
       carrito: mesa.carrito,
@@ -686,7 +686,7 @@ async function guardarVentaSupabase({
   metodo
 }) {
 
-  const { error } = await supabase
+  const { error } = await supabase_res
     .from("ventas")
     .insert({
       mesa_id: mesa.id,
