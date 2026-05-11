@@ -5,6 +5,9 @@ const API_DESA = "https://script.google.com/macros/s/AKfycbxwTTe7rirMon4zaoIe5eS
                 //"https://script.google.com/macros/s/AKfycbw5B721kgIQ32F-NIMlrU351lg-gSTsg0fqJVsXk8xesHYh6pn7MtQbjiTi47QquuTy/exec"; 
                 //"https://script.google.com/macros/s/AKfycbyLNPKzt0ROtLnBE5ICTZS9hGfFmpc5GEEFmw3W5qhNMMt_gK5GoqdwAYL23MmzicZxdw/exec";
 
+/* ========== MESAS ========== */
+const MESA_COUNT = 10; // ← Cambiar para configurar la cantidad de mesas
+
 function getAPI( ambiente = "desa"){
   if(ambiente.toLowerCase() == "desa"){
     return API_DESA;
