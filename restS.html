@@ -533,7 +533,7 @@
 
 <script>
 const SUPABASE_URL = "https://vrptuoncsmgtzwkoodee.supabase.co";
-const SUPABASE_KEY = "sb_publishable_YiPcokZRtA-8fKkq8eMW9w_YCSnw84j";
+const SUPABASE_KEY = "PEGAR_ANON_PUBLIC_KEY_AQUI";
 
 const supabase = window.supabase.createClient(
   SUPABASE_URL,
@@ -584,7 +584,7 @@ function doLogin() {
   localStorage.setItem("session", "active");
   initMesas();
   showMesasScreen();
-  cargarProductos();
+  cargarProductosSupabase();
 }
 
 function doLogout() {
@@ -712,7 +712,7 @@ document.addEventListener("DOMContentLoaded", function() {
   if (checkSession()) {
     initMesas();
     showMesasScreen();
-    cargarProductos();
+    cargarProductosSupabase();
   } else {
     showLogin();
   }
@@ -928,7 +928,7 @@ function volverAMesas() {
   closeDrawer();
   showMesasScreen();
 }
-
+/*
 async function cargarProductos(force = false) {
   const cache = localStorage.getItem("productos");
   const localTs = localStorage.getItem("productos_timestamp");
@@ -969,7 +969,7 @@ async function cargarProductos(force = false) {
     }
   }
 }
-
+*/
 function renderProductos(lista = productos) {
   const stateEl = document.getElementById("stateCenter");
   const grid = document.getElementById("grid");
@@ -1844,7 +1844,7 @@ async function guardarProducto() {
       closeProductModal();
       localStorage.removeItem("productos");
       localStorage.removeItem("productos_timestamp");
-      cargarProductos(true);
+      cargarProductosSupabase(true);
     } else {
       showToast("Error: " + (res.error || "no se pudo guardar"), "error");
     }
@@ -1875,7 +1875,7 @@ async function eliminarProducto() {
       closeProductModal();
       localStorage.removeItem("productos");
       localStorage.removeItem("productos_timestamp");
-      //cargarProductos(true);
+      //cargarProductosSupabase(true);
       recargarProductos(true);
     } else {
       showToast("Error: " + (res.error || "no se pudo eliminar"), "error");
@@ -1931,7 +1931,7 @@ function recargarProductos(force = false) {
   grid.innerHTML = "";
   stateEl.style.display = "flex";
   stateEl.innerHTML = '<div class="spinner"></div>';
-  cargarProductos(true);
+  cargarProductosSupabase(true);
 }
 function vibrar() {
   if ("vibrate" in navigator) {
