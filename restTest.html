@@ -58,6 +58,81 @@
   padding: 2px 8px;
 }
 .mesa-card.ocupada .mesa-status { color: #1d4ed8; }
+.mesa-num {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: .3px;
+}
+.mesa-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Modal nombre mesa */
+.nombre-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 900;
+  align-items: center;
+  justify-content: center;
+}
+.nombre-modal-overlay.open { display: flex; }
+.nombre-modal {
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px 20px 18px;
+  width: min(320px, 90vw);
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.nombre-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.nombre-modal input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color .15s;
+}
+.nombre-modal input:focus { border-color: #1d4ed8; }
+.nombre-modal-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.nombre-modal-btns button {
+  padding: 8px 18px;
+  border-radius: 9px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-cancelar-nombre { background: #f1f5f9; color: #64748b; }
+.btn-guardar-nombre  { background: #1d4ed8; color: #fff; }
+.mesa-card .edit-hint {
+  font-size: 10px;
+  color: #cbd5e1;
+  margin-top: -2px;
+}
 </style>
 </head>
 <audio id="successSound" src="success_premium.mp3" preload="auto"></audio>  
@@ -180,7 +255,7 @@
   <div class="total-box">
     <span class="total-label">Total</span>
     <div class="total-amount" id="totalAmount">$0</div>
-    <div id="mesaBadge" style="display:none;font-size:12px;font-weight:600;color:var(--primary,#1d4ed8);letter-spacing:.2px;margin-top:1px;white-space:nowrap;"></div>
+    <div id="mesaBadge" style="display:none;font-size:11px;font-weight:600;color:var(--primary,#1d4ed8);letter-spacing:.2px;margin-top:1px;white-space:nowrap;"></div>
   </div>
 </header>
 
@@ -636,7 +711,12 @@ function initMesas() {
 }
 
 function crearMesa(numero) {
-  return { numero, carrito: [], ocupada: false, descuento: 0, descuentoDesc: "" };
+  return { numero, nombre: "", carrito: [], ocupada: false, descuento: 0, descuentoDesc: "" };
+}
+
+// Devuelve el nombre personalizado o "Mesa N" como fallback
+function mesaLabel(mesa) {
+  return mesa.nombre ? mesa.nombre : `Mesa ${mesa.numero}`;
 }
 
 function saveMesas() {
@@ -664,20 +744,42 @@ function renderMesas() {
     const div = document.createElement("div");
     div.className = "mesa-card" + (ocupada ? " ocupada" : "");
     div.innerHTML = `
-      <div class="mesa-num">Mesa ${mesa.numero}</div>
-      <div class="mesa-icon">${ocupada ? "🍽️" : `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="#22c55e"/></svg>`}</div>
+      <div class="mesa-num">#${mesa.numero}</div>
+      <div class="mesa-nombre">${mesaLabel(mesa)}</div>
+      <div class="mesa-icon">${ocupada ? "🍽️" : `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="10" fill="#22c55e"/></svg>`}</div>
       <div class="mesa-status">${ocupada ? fmt(total) : "Libre"}</div>
       ${items > 0 ? `<div class="mesa-items">${items} ítem${items !== 1 ? "s" : ""}</div>` : ""}
+      <div class="edit-hint">mantener = editar</div>
     `;
-    /*
-    div.innerHTML = `
-      <div class="mesa-num">Mesa ${mesa.numero}</div>
-      <div class="mesa-icon">${ocupada ? "🍽️" : "🟢"}</div>
-      <div class="mesa-status">${ocupada ? fmt(total) : "Libre"}</div>
-      ${items > 0 ? `<div class="mesa-items">${items} ítem${items !== 1 ? "s" : ""}</div>` : ""}
-    `;
-    */
-    div.addEventListener("click", () => seleccionarMesa(mesa));
+
+    // Long press → editar nombre
+    let lpTimer = null;
+    let didLong = false;
+
+    const startLP = () => {
+      didLong = false;
+      lpTimer = setTimeout(() => {
+        didLong = true;
+        navigator.vibrate?.(50);
+        abrirNombreModal(mesa);
+      }, 550);
+    };
+    const cancelLP = () => clearTimeout(lpTimer);
+
+    div.addEventListener("touchstart",  startLP,  { passive: true });
+    div.addEventListener("touchend",    cancelLP);
+    div.addEventListener("touchmove",   cancelLP);
+    div.addEventListener("touchcancel", cancelLP);
+    div.addEventListener("mousedown",   (e) => { if (e.button === 0) startLP(); });
+    div.addEventListener("mouseup",     cancelLP);
+    div.addEventListener("mouseleave",  cancelLP);
+    div.addEventListener("contextmenu", (e) => { e.preventDefault(); cancelLP(); abrirNombreModal(mesa); });
+
+    div.addEventListener("click", () => {
+      if (didLong) { didLong = false; return; }
+      seleccionarMesa(mesa);
+    });
+
     grid.appendChild(div);
   });
 }
@@ -693,11 +795,11 @@ function seleccionarMesa(mesa) {
   // Mostrar botón volver + badge header
   document.getElementById("btnVolverMesas").style.display = "inline-flex";
   document.getElementById("mesaBadge").style.display  = "block";
-  document.getElementById("mesaBadge").textContent    = `🍽️ Mesa ${mesa.numero}`;
+  document.getElementById("mesaBadge").textContent    = `🍽️ ${mesaLabel(mesa)}`;
 
   // Badge en el drawer
   document.getElementById("drawerMesaBadge").style.display   = "inline-block";
-  document.getElementById("drawerMesaBadge").textContent     = `Mesa ${mesa.numero}`;
+  document.getElementById("drawerMesaBadge").textContent     = mesaLabel(mesa);
 
   // Ocultar mesas, mostrar POS
   document.getElementById("mesasScreen").style.display = "none";
@@ -1742,6 +1844,55 @@ function playSuccessSound() {
   audio.play().catch(() => {});
   //vibrar();
 }
+
+/* ========== NOMBRE DE MESA ========== */
+let mesaEditando = null;
+
+function abrirNombreModal(mesa) {
+  mesaEditando = mesa;
+  document.getElementById("nombreModalTitle").textContent = `Nombre — #${mesa.numero}`;
+  document.getElementById("nombreModalInput").value = mesa.nombre || "";
+  document.getElementById("nombreModalOverlay").classList.add("open");
+  setTimeout(() => document.getElementById("nombreModalInput").select(), 150);
+}
+
+function cerrarNombreModal() {
+  document.getElementById("nombreModalOverlay").classList.remove("open");
+  mesaEditando = null;
+}
+
+function guardarNombreMesa() {
+  if (!mesaEditando) return;
+  const val = document.getElementById("nombreModalInput").value.trim();
+  mesaEditando.nombre = val;
+  saveMesas();
+  cerrarNombreModal();
+  renderMesas();
+}
+
+function handleNombreOverlayClick(e) {
+  if (e.target === document.getElementById("nombreModalOverlay")) cerrarNombreModal();
+}
+
+// Enter confirma en el input del modal
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("nombreModalInput")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") guardarNombreMesa();
+    if (e.key === "Escape") cerrarNombreModal();
+  });
+});
 </script>
+<!-- ===== MODAL NOMBRE MESA ===== -->
+<div class="nombre-modal-overlay" id="nombreModalOverlay" onclick="handleNombreOverlayClick(event)">
+  <div class="nombre-modal">
+    <div class="nombre-modal-title" id="nombreModalTitle">Nombre de la mesa</div>
+    <input type="text" id="nombreModalInput" placeholder="Ej: Terraza, Ventana, VIP..." maxlength="20" autocomplete="off">
+    <div class="nombre-modal-btns">
+      <button class="btn-cancelar-nombre" onclick="cerrarNombreModal()">Cancelar</button>
+      <button class="btn-guardar-nombre"  onclick="guardarNombreMesa()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
