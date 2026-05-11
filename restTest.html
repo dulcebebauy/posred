@@ -694,29 +694,34 @@ Object.defineProperty(window, "carrito", {
 });
 
 function initMesas() {
+  const config = (typeof MESAS_CONFIG !== "undefined" && MESAS_CONFIG.length)
+    ? MESAS_CONFIG
+    : Array.from({ length: 10 }, (_, i) => `Mesa ${i + 1}`);
+
   const saved = localStorage.getItem("mesas_state");
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      // Reconstruir con MESA_COUNT actual, preservando datos guardados
-      mesas = Array.from({ length: MESA_COUNT }, (_, i) => {
+      // Reconstruir según config actual, preservando carritos y nombres personalizados
+      mesas = config.map((nombreDefault, i) => {
         const n = i + 1;
         const existing = parsed.find(m => m.numero === n);
-        return existing || crearMesa(n);
+        if (existing) return existing;
+        return crearMesa(n, nombreDefault);
       });
       return;
     } catch {}
   }
-  mesas = Array.from({ length: MESA_COUNT }, (_, i) => crearMesa(i + 1));
+  mesas = config.map((nombreDefault, i) => crearMesa(i + 1, nombreDefault));
 }
 
-function crearMesa(numero) {
-  return { numero, nombre: "", carrito: [], ocupada: false, descuento: 0, descuentoDesc: "" };
+function crearMesa(numero, nombreDefault = "") {
+  return { numero, nombre: nombreDefault, carrito: [], ocupada: false, descuento: 0, descuentoDesc: "" };
 }
 
-// Devuelve el nombre personalizado o "Mesa N" como fallback
+// Devuelve el nombre de la mesa (siempre tiene uno, viene del config o fue editado)
 function mesaLabel(mesa) {
-  return mesa.nombre ? mesa.nombre : `Mesa ${mesa.numero}`;
+  return mesa.nombre || `Mesa ${mesa.numero}`;
 }
 
 function saveMesas() {
