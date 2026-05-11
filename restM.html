@@ -1243,7 +1243,8 @@ async function pagar(metodo) {
     cantidad: i.cantidad,
     precio: i.precio,
     total: i.precio * i.cantidad,
-    id: i.id
+    id: i.id,
+    mesaSeleccionada.nombre
   }));
 
   if (currentDiscount > 0) {
@@ -1252,7 +1253,8 @@ async function pagar(metodo) {
       nombre: "Descuento - " + desc,
       cantidad: 1,
       precio: -currentDiscount,
-      total: -currentDiscount
+      total: -currentDiscount,
+      mesaSeleccionada.nombre
     });
   }
 
