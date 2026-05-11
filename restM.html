@@ -1244,7 +1244,7 @@ async function pagar(metodo) {
     precio: i.precio,
     total: i.precio * i.cantidad,
     id: i.id,
-    mesaSeleccionada.nombre
+    mesa: mesaSeleccionada.nombre
   }));
 
   if (currentDiscount > 0) {
@@ -1254,7 +1254,7 @@ async function pagar(metodo) {
       cantidad: 1,
       precio: -currentDiscount,
       total: -currentDiscount,
-      mesaSeleccionada.nombre
+      mesa: mesaSeleccionada.nombre
     });
   }
 
