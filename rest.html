@@ -177,11 +177,10 @@
     </button>
   </div>
 
-  <div id="mesaBadge" style="display:none;font-size:13px;font-weight:700;background:var(--primary,#1d4ed8);color:#fff;border-radius:8px;padding:3px 10px;margin-left:2px;white-space:nowrap;"></div>
-
   <div class="total-box">
     <span class="total-label">Total</span>
     <div class="total-amount" id="totalAmount">$0</div>
+    <div id="mesaBadge" style="display:none;font-size:12px;font-weight:600;color:var(--primary,#1d4ed8);letter-spacing:.2px;margin-top:1px;white-space:nowrap;"></div>
   </div>
 </header>
 
@@ -693,8 +692,8 @@ function seleccionarMesa(mesa) {
 
   // Mostrar botón volver + badge header
   document.getElementById("btnVolverMesas").style.display = "inline-flex";
-  document.getElementById("mesaBadge").style.display      = "inline-flex";
-  document.getElementById("mesaBadge").textContent        = `Mesa ${mesa.numero}`;
+  document.getElementById("mesaBadge").style.display  = "block";
+  document.getElementById("mesaBadge").textContent    = `🍽️ Mesa ${mesa.numero}`;
 
   // Badge en el drawer
   document.getElementById("drawerMesaBadge").style.display   = "inline-block";
