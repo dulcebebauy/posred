@@ -231,7 +231,10 @@
 <!-- Drawer -->
 <div class="drawer" id="drawer">
   <div class="drawer-head">
-    <span class="drawer-title">Carrito</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="drawer-title">Carrito</span>
+      <span id="drawerMesaBadge" style="display:none;font-size:12px;font-weight:700;background:var(--primary,#1d4ed8);color:#fff;border-radius:6px;padding:2px 9px;letter-spacing:.2px;"></span>
+    </div>
     <button class="icon-btn" onclick="closeDrawer()">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
     </button>
@@ -679,10 +682,14 @@ function seleccionarMesa(mesa) {
   document.getElementById("discountDesc").value  = mesa.descuentoDesc || "";
   currentDiscount = 0; // se recalculará en updateTotal
 
-  // Mostrar botón volver + badge
+  // Mostrar botón volver + badge header
   document.getElementById("btnVolverMesas").style.display = "inline-flex";
   document.getElementById("mesaBadge").style.display      = "inline-flex";
   document.getElementById("mesaBadge").textContent        = `Mesa ${mesa.numero}`;
+
+  // Badge en el drawer
+  document.getElementById("drawerMesaBadge").style.display   = "inline-block";
+  document.getElementById("drawerMesaBadge").textContent     = `Mesa ${mesa.numero}`;
 
   // Ocultar mesas, mostrar POS
   document.getElementById("mesasScreen").style.display = "none";
