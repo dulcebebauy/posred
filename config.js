@@ -8,6 +8,14 @@ const API_DESA = "https://script.google.com/macros/s/AKfycbxwTTe7rirMon4zaoIe5eS
 /* ========== MESAS ========== */
 const MESA_COUNT = 5; // ← Cambiar para configurar la cantidad de mesas
 
+const MESAS_CONFIG = [
+  "Mesa 1",
+  "Mesa 2",
+  "Mesa 3",
+  "Mesa 4",
+  "Mostrador"// ← agregar o quitar entradas acá
+];
+
 function getAPI( ambiente = "desa"){
   if(ambiente.toLowerCase() == "desa"){
     return API_DESA;
