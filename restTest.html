@@ -693,7 +693,98 @@ Object.defineProperty(window, "carrito", {
   configurable: true
 });
 
-function initMesas() {
+/* ========== REMOTE SYNC ========== */
+let _syncTimers = {}; // debounce por mesa
+
+function crearMesa(numero, nombreDefault = "") {
+  return {
+    numero,
+    nombre: nombreDefault,
+    carrito: [],
+    ocupada: false,
+    descuento: 0,
+    descuentoDesc: "",
+    remoteId: null   // se asigna cuando se guarda remotamente
+  };
+}
+
+function mesaLabel(mesa) {
+  return mesa.nombre || `Mesa ${mesa.numero}`;
+}
+
+function saveMesas() {
+  localStorage.setItem("mesas_state", JSON.stringify(mesas));
+}
+
+// Sincroniza una mesa abierta con Google Sheets (debounced 600ms)
+function syncMesaRemota(mesa) {
+  if (!mesa || mesa.carrito.length === 0) return;
+  clearTimeout(_syncTimers[mesa.numero]);
+  _syncTimers[mesa.numero] = setTimeout(() => _doSyncMesa(mesa), 600);
+}
+
+async function _doSyncMesa(mesa) {
+  try {
+    const payload = {
+      action: "guardarMesa",
+      token: POSTOKEN,
+      remoteId:      mesa.remoteId || null,
+      numero:        mesa.numero,
+      nombre:        mesaLabel(mesa),
+      carrito:       JSON.stringify(mesa.carrito),
+      descuento:     mesa.descuento || 0,
+      descuentoDesc: mesa.descuentoDesc || "",
+      total:         mesa.carrito.reduce((s, i) => s + i.precio * i.cantidad, 0),
+      timestamp:     new Date().toISOString()
+    };
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "data=" + encodeURIComponent(JSON.stringify(payload))
+    }).then(r => r.json());
+
+    if (res.ok && res.remoteId) {
+      mesa.remoteId = res.remoteId;
+      saveMesas();
+    }
+  } catch {
+    // Fallo silencioso: la info sigue en localStorage
+  }
+}
+
+// Carga mesas abiertas desde Sheets y las fusiona con MESAS_CONFIG
+async function cargarMesasRemotas() {
+  try {
+    const data = await fetch(API + "?action=mesas_abiertas&token=" + encodeURIComponent(POSTOKEN))
+      .then(r => r.json());
+
+    if (!Array.isArray(data)) return;
+
+    data.forEach(remote => {
+      const local = mesas.find(m => m.numero === remote.numero);
+      if (!local) return;
+      // Solo sobrescribir si la mesa local está vacía o el remoto tiene más items
+      const localItems = local.carrito.reduce((s, i) => s + i.cantidad, 0);
+      const remoteItems = (remote.carrito || []).reduce((s, i) => s + i.cantidad, 0);
+      if (localItems === 0 && remoteItems > 0) {
+        local.carrito       = remote.carrito || [];
+        local.descuento     = remote.descuento || 0;
+        local.descuentoDesc = remote.descuentoDesc || "";
+        local.remoteId      = remote.remoteId;
+      } else if (remoteItems > 0 && !local.remoteId) {
+        // Tiene remote pero falta remoteId local — guardar referencia
+        local.remoteId = remote.remoteId;
+      }
+    });
+
+    saveMesas();
+    renderMesas();
+  } catch {
+    // Sin conexión: usar solo localStorage
+  }
+}
+
+async function initMesas() {
   const config = (typeof MESAS_CONFIG !== "undefined" && MESAS_CONFIG.length)
     ? MESAS_CONFIG
     : Array.from({ length: 10 }, (_, i) => `Mesa ${i + 1}`);
@@ -702,30 +793,21 @@ function initMesas() {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      // Reconstruir según config actual, preservando carritos y nombres personalizados
       mesas = config.map((nombreDefault, i) => {
         const n = i + 1;
         const existing = parsed.find(m => m.numero === n);
         if (existing) return existing;
         return crearMesa(n, nombreDefault);
       });
-      return;
-    } catch {}
+    } catch {
+      mesas = config.map((nombreDefault, i) => crearMesa(i + 1, nombreDefault));
+    }
+  } else {
+    mesas = config.map((nombreDefault, i) => crearMesa(i + 1, nombreDefault));
   }
-  mesas = config.map((nombreDefault, i) => crearMesa(i + 1, nombreDefault));
-}
 
-function crearMesa(numero, nombreDefault = "") {
-  return { numero, nombre: nombreDefault, carrito: [], ocupada: false, descuento: 0, descuentoDesc: "" };
-}
-
-// Devuelve el nombre de la mesa (siempre tiene uno, viene del config o fue editado)
-function mesaLabel(mesa) {
-  return mesa.nombre || `Mesa ${mesa.numero}`;
-}
-
-function saveMesas() {
-  localStorage.setItem("mesas_state", JSON.stringify(mesas));
+  // Cargar mesas abiertas desde Sheets en segundo plano
+  cargarMesasRemotas();
 }
 
 /* -------- PANTALLA DE MESAS -------- */
@@ -966,6 +1048,7 @@ function addToCart(prod) {
   else carrito.push({ id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1 });
 
   saveCart();
+  syncMesaRemota(mesaSeleccionada);
   updateTotal();
   applyFilters();
 
@@ -978,6 +1061,7 @@ function changeQty(id, delta) {
   carrito[idx].cantidad += delta;
   if (carrito[idx].cantidad <= 0) carrito.splice(idx, 1);
   saveCart();
+  syncMesaRemota(mesaSeleccionada);
   updateTotal();
   applyFilters();
   renderCartItems();
@@ -986,6 +1070,7 @@ function changeQty(id, delta) {
 function removeFromCart(id) {
   carrito = carrito.filter(i => i.id !== id);
   saveCart();
+  syncMesaRemota(mesaSeleccionada);
   updateTotal();
   applyFilters();
   renderCartItems();
@@ -1262,19 +1347,39 @@ async function pagar(metodo) {
   setPayBtnsDisabled(true);
 
   try {
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(JSON.stringify({
-        action: "venta",
-        token: POSTOKEN,
-        ...venta
-      }))
-    });
-    const json = await res.json();
+    // Si la mesa tiene remoteId, cerrar esa fila; si no, crear venta normal
+    const remoteId = mesaSeleccionada ? mesaSeleccionada.remoteId : null;
 
-    if (json.error) {
-      throw new Error(json.error);
+    if (remoteId) {
+      // Actualizar la fila existente marcándola como cerrada
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(JSON.stringify({
+          action: "cerrarMesa",
+          token: POSTOKEN,
+          remoteId,
+          metodo,
+          items: JSON.stringify(items),
+          total: items.reduce((s, i) => s + i.total, 0),
+          fechaCierre: new Date().toISOString()
+        }))
+      }).then(r => r.json());
+
+      if (res.error) throw new Error(res.error);
+    } else {
+      // Fallback: venta clásica (mesa sin persistencia remota aún)
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(JSON.stringify({
+          action: "venta",
+          token: POSTOKEN,
+          ...venta
+        }))
+      }).then(r => r.json());
+
+      if (res.error) throw new Error(res.error);
     }
 
     // Limpiar mesa activa
@@ -1282,18 +1387,18 @@ async function pagar(metodo) {
       mesaSeleccionada.carrito       = [];
       mesaSeleccionada.descuento     = 0;
       mesaSeleccionada.descuentoDesc = "";
+      mesaSeleccionada.remoteId      = null;
     }
     document.getElementById("discount").value = "";
     document.getElementById("discountDesc").value = "";
     currentDiscount = 0;
-    localStorage.removeItem("carrito"); // compatibilidad legacy
+    localStorage.removeItem("carrito");
     saveMesas();
     updateTotal();
     applyFilters();
     closeDrawer();
     showToast("Pago procesado (" + metodo + ")", "success");
     playSuccessSound();
-    // Volver a mesas después de un breve delay para que se vea el toast
     setTimeout(() => volverAMesas(), 900);
   } catch {
     showToast("Error al procesar el pago. Intente nuevamente.", "error");
