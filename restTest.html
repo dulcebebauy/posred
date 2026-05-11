@@ -900,11 +900,14 @@ function seleccionarMesa(mesa) {
 }
 
 function volverAMesas() {
-  // Guardar descuento de la mesa activa
   if (mesaSeleccionada) {
     mesaSeleccionada.descuento      = parseFloat(document.getElementById("discount").value) || 0;
     mesaSeleccionada.descuentoDesc  = document.getElementById("discountDesc").value || "";
     saveMesas();
+    // Si hay carrito activo, sincronizar el descuento actualizado
+    if (mesaSeleccionada.carrito.length > 0) {
+      syncMesaRemota(mesaSeleccionada);
+    }
   }
   closeDrawer();
   showMesasScreen();
@@ -1078,7 +1081,18 @@ function removeFromCart(id) {
 
 function clearCart() {
   if (!confirm("¿Vaciar todo el carrito?")) return;
-  if (mesaSeleccionada) mesaSeleccionada.carrito = [];
+
+  // Si la mesa tiene fila abierta en Sheets, cerrarla (vaciado = sin venta)
+  if (mesaSeleccionada && mesaSeleccionada.remoteId) {
+    _cancelarMesaRemota(mesaSeleccionada);
+  }
+
+  if (mesaSeleccionada) {
+    mesaSeleccionada.carrito       = [];
+    mesaSeleccionada.descuento     = 0;
+    mesaSeleccionada.descuentoDesc = "";
+    mesaSeleccionada.remoteId      = null;
+  }
   document.getElementById("discount").value = "";
   document.getElementById("discountDesc").value = "";
   currentDiscount = 0;
@@ -1087,6 +1101,28 @@ function clearCart() {
   applyFilters();
   renderCartItems();
   navigator.vibrate?.(30);
+}
+
+// Marca la fila de mesa como cerrada (mesaCerrada=1) sin registrar venta
+// Se usa cuando el usuario vacía el carrito sin pagar
+async function _cancelarMesaRemota(mesa) {
+  try {
+    await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "data=" + encodeURIComponent(JSON.stringify({
+        action:     "cerrarMesa",
+        token:      POSTOKEN,
+        remoteId:   mesa.remoteId,
+        metodo:     "cancelado",
+        items:      "[]",
+        total:      0,
+        fechaCierre: new Date().toISOString()
+      }))
+    });
+  } catch {
+    // Fallo silencioso
+  }
 }
 
 function saveCart() {
@@ -1976,6 +2012,10 @@ function guardarNombreMesa() {
   const val = document.getElementById("nombreModalInput").value.trim();
   mesaEditando.nombre = val;
   saveMesas();
+  // Si la mesa tiene carrito activo, actualizar el nombre en Sheets
+  if (mesaEditando.carrito.length > 0) {
+    syncMesaRemota(mesaEditando);
+  }
   cerrarNombreModal();
   renderMesas();
 }
