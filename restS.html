@@ -953,11 +953,7 @@ async function cargarProductos(force = false) {
         // 2. Luego ordenar alfabéticamente por nombre
         return a.nombre.localeCompare(b.nombre, 'es');
       });
-      /*
-      productos = data.sort((a, b) =>
-        a.nombre.trim().localeCompare(b.nombre.trim(), "es", { sensitivity: "base" })
-      );
-      */
+    
       applyFilters();
       localStorage.setItem("productos", JSON.stringify(productos));
       localStorage.setItem("productos_timestamp", serverTs);
