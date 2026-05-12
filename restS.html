@@ -634,6 +634,7 @@ function showPOS() {
 ========================= */
 
 async function cargarProductosSupabase() {
+  test();
   const { data, error } = await supabase_res
     .from("productos")
     .select("*")
