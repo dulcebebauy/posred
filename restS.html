@@ -626,7 +626,7 @@ async function cargarProductosSupabase() {
     .from("productos")
     .select("*")
     .eq("activo", true)
-    .order("nombre");
+    .order("categoria", "nombre");
 
   if (error) {
     console.error(error);
