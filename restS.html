@@ -647,6 +647,19 @@ async function cargarProductosSupabase() {
     return [];
   }
 
+   productos = data.sort((a, b) => {
+    // 1. Ordenar por ventas (mayor a menor)
+    if (b.cantidad_ventas !== a.cantidad_ventas) {
+      return b.cantidad_ventas - a.cantidad_ventas;
+    }
+  
+    // 2. Luego ordenar alfabéticamente por nombre
+    return a.nombre.localeCompare(b.nombre, 'es');
+  });
+
+  applyFilters();
+  localStorage.setItem("productos", JSON.stringify(productos));
+
   return data || [];
 }
 
