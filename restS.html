@@ -650,6 +650,7 @@ async function cargarProductosSupabase() {
 }
 
 async function cargarMesasSupabase() {
+  test();
   const { data, error } = await supabase_res
     .from("mesas")
     .select("*")
