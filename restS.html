@@ -539,6 +539,20 @@ const supabase_res = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
+
+  async function test() {
+
+  const { data, error } = await supabase_res
+    .from("productos")
+    .select("*");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  console.log(data);
+}
 </script>
 
 <script>
