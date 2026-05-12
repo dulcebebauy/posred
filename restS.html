@@ -540,19 +540,7 @@ const supabase_res = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-  async function test() {
-
-  const { data, error } = await supabase_res
-    .from("productos")
-    .select("*");
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  console.log(data);
-}
+// Supabase client inicializado correctamente
 </script>
 
 <script>
@@ -574,7 +562,7 @@ function checkSession() {
         && (localStorage.getItem("pass") != null && localStorage.getItem("pass") != ""));
 }
 
-function doLogin() {
+async function doLogin() {
   const userInput = document.getElementById("loginUser").value.trim();
   const passInput = document.getElementById("loginPass").value;
   const errorEl = document.getElementById("loginError");
@@ -596,7 +584,7 @@ function doLogin() {
   localStorage.setItem("user", userInput);
   localStorage.setItem("pass", passInput);
   localStorage.setItem("session", "active");
-  initMesas();
+  await initMesas();
   showMesasScreen();
   cargarProductosSupabase();
 }
@@ -634,7 +622,6 @@ function showPOS() {
 ========================= */
 
 async function cargarProductosSupabase() {
-  test();
   const { data, error } = await supabase_res
     .from("productos")
     .select("*")
@@ -664,7 +651,6 @@ async function cargarProductosSupabase() {
 }
 
 async function cargarMesasSupabase() {
-  test();
   const { data, error } = await supabase_res
     .from("mesas")
     .select("*")
@@ -730,7 +716,7 @@ async function guardarVentaSupabase({
 }
 
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
   document.getElementById("loginUser").addEventListener("keydown", function(e) {
     if (e.key === "Enter") document.getElementById("loginPass").focus();
   });
@@ -739,7 +725,7 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   if (checkSession()) {
-    initMesas();
+    await initMesas();
     showMesasScreen();
     cargarProductosSupabase();
   } else {
@@ -823,29 +809,67 @@ Object.defineProperty(window, "carrito", {
   configurable: true
 });
 
-function initMesas() {
+async function initMesas() {
   const config = (typeof MESAS_CONFIG !== "undefined" && MESAS_CONFIG.length)
     ? MESAS_CONFIG
     : Array.from({ length: 10 }, (_, i) => `Mesa ${i + 1}`);
 
-  const saved = localStorage.getItem("mesas_state");
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      // Reconstruir según config actual, preservando carritos y nombres personalizados
-      mesas = config.map((nombreDefault, i) => {
-        const n = i + 1;
-        const existing = parsed.find(m => m.numero === n);
-        if (existing) return existing;
-        return crearMesa(n, nombreDefault);
-      });
-      return;
-    } catch {}
+  // Intentar cargar desde Supabase
+  const remotas = await cargarMesasSupabase();
+
+  if (remotas && remotas.length > 0) {
+    // Mapear datos de Supabase al formato local
+    mesas = remotas.map(m => ({
+      id:           m.id,
+      numero:       m.numero,
+      nombre:       m.nombre || `Mesa ${m.numero}`,
+      carrito:      Array.isArray(m.carrito) ? m.carrito : [],
+      descuento:    m.descuento || 0,
+      descuentoDesc: "",
+      ocupada:      !m.mesa_cerrada
+    }));
+
+    // Si hay mesas en config que no existen en Supabase, crearlas
+    for (let i = 0; i < config.length; i++) {
+      const n = i + 1;
+      if (!mesas.find(m => m.numero === n)) {
+        const nueva = await crearMesaSupabase(n, config[i]);
+        if (nueva) mesas.push(nueva);
+      }
+    }
+
+    mesas.sort((a, b) => a.numero - b.numero);
+    return;
   }
-  mesas = config.map((nombreDefault, i) => crearMesa(i + 1, nombreDefault));
+
+  // Fallback: crear todas las mesas en Supabase
+  mesas = [];
+  for (let i = 0; i < config.length; i++) {
+    const nueva = await crearMesaSupabase(i + 1, config[i]);
+    if (nueva) mesas.push(nueva);
+    else mesas.push(crearMesaLocal(i + 1, config[i]));
+  }
 }
 
-function crearMesa(numero, nombreDefault = "") {
+async function crearMesaSupabase(numero, nombreDefault = "") {
+  const { data, error } = await supabase_res
+    .from("mesas")
+    .insert({ numero, nombre: nombreDefault, carrito: [], mesa_cerrada: true })
+    .select()
+    .single();
+  if (error) { console.error("Error creando mesa:", error); return null; }
+  return {
+    id:           data.id,
+    numero:       data.numero,
+    nombre:       data.nombre || `Mesa ${data.numero}`,
+    carrito:      [],
+    descuento:    0,
+    descuentoDesc: "",
+    ocupada:      false
+  };
+}
+
+function crearMesaLocal(numero, nombreDefault = "") {
   return { numero, nombre: nombreDefault, carrito: [], ocupada: false, descuento: 0, descuentoDesc: "" };
 }
 
@@ -855,7 +879,10 @@ function mesaLabel(mesa) {
 }
 
 function saveMesas() {
-  localStorage.setItem("mesas_state", JSON.stringify(mesas));
+  // Persistir en Supabase la mesa activa
+  if (mesaSeleccionada) {
+    guardarMesaSupabase(mesaSeleccionada).catch(e => console.error("Error guardando mesa:", e));
+  }
 }
 
 /* -------- PANTALLA DE MESAS -------- */
@@ -865,7 +892,21 @@ function showMesasScreen() {
   document.getElementById("posApp").style.display         = "none";
   document.getElementById("mesasScreen").style.display    = "flex";
   document.getElementById("reportPanel").classList.remove("open");
-  renderMesas();
+  // Recargar mesas desde Supabase para tener estado actualizado
+  cargarMesasSupabase().then(remotas => {
+    if (remotas && remotas.length > 0) {
+      mesas = remotas.map(m => ({
+        id:            m.id,
+        numero:        m.numero,
+        nombre:        m.nombre || `Mesa ${m.numero}`,
+        carrito:       Array.isArray(m.carrito) ? m.carrito : [],
+        descuento:     m.descuento || 0,
+        descuentoDesc: "",
+        ocupada:       !m.mesa_cerrada
+      })).sort((a, b) => a.numero - b.numero);
+    }
+    renderMesas();
+  });
 }
 
 function renderMesas() {
@@ -948,11 +989,11 @@ function seleccionarMesa(mesa) {
 }
 
 function volverAMesas() {
-  // Guardar descuento de la mesa activa
+  // Guardar descuento de la mesa activa en Supabase
   if (mesaSeleccionada) {
     mesaSeleccionada.descuento      = parseFloat(document.getElementById("discount").value) || 0;
     mesaSeleccionada.descuentoDesc  = document.getElementById("discountDesc").value || "";
-    saveMesas();
+    guardarMesaSupabase(mesaSeleccionada).catch(e => console.error("Error guardando mesa al volver:", e));
   }
   closeDrawer();
   showMesasScreen();
@@ -1123,7 +1164,7 @@ function clearCart() {
   document.getElementById("discount").value = "";
   document.getElementById("discountDesc").value = "";
   currentDiscount = 0;
-  saveMesas();
+  saveCart(); // Persiste en Supabase
   updateTotal();
   applyFilters();
   renderCartItems();
@@ -1131,7 +1172,10 @@ function clearCart() {
 }
 
 function saveCart() {
-  saveMesas();
+  // Persistir carrito de la mesa activa en Supabase
+  if (mesaSeleccionada) {
+    guardarMesaSupabase(mesaSeleccionada).catch(e => console.error("Error guardando carrito:", e));
+  }
 }
 
 function loadCart() {
@@ -1365,65 +1409,76 @@ async function pagar(metodo) {
 
   const desc = document.getElementById("discountDesc").value || "Sin descripción";
   const items = carrito.map(i => ({
-    nombre: i.nombre,
+    nombre:   i.nombre,
     cantidad: i.cantidad,
-    precio: i.precio,
-    total: i.precio * i.cantidad,
-    id: i.id,
-    mesa: mesaSeleccionada.nombre
+    precio:   i.precio,
+    total:    i.precio * i.cantidad,
+    id:       i.id,
+    mesa:     mesaSeleccionada.nombre
   }));
 
   if (currentDiscount > 0) {
     items.push({
-      id: "descuento",
-      nombre: "Descuento - " + desc,
+      id:       "descuento",
+      nombre:   "Descuento - " + desc,
       cantidad: 1,
-      precio: -currentDiscount,
-      total: -currentDiscount,
-      mesa: mesaSeleccionada.nombre
+      precio:   -currentDiscount,
+      total:    -currentDiscount,
+      mesa:     mesaSeleccionada.nombre
     });
   }
 
-  const venta = { metodo, items };
+  const subtotal = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
+  const total    = subtotal - currentDiscount;
 
   showPayLoader(true);
   setPayBtnsDisabled(true);
 
   try {
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(JSON.stringify({
-        action: "venta",
-        token: POSTOKEN,
-        ...venta
-      }))
+    // 1. Registrar la venta en Supabase
+    await guardarVentaSupabase({
+      mesa:     mesaSeleccionada,
+      items,
+      subtotal,
+      descuento: currentDiscount,
+      total,
+      metodo
     });
-    const json = await res.json();
 
-    if (json.error) {
-      throw new Error(json.error);
-    }
+    // 2. Limpiar la mesa en Supabase
+    const { error: errMesa } = await supabase_res
+      .from("mesas")
+      .update({
+        carrito:      [],
+        subtotal:     0,
+        descuento:    0,
+        total:        0,
+        metodo_pago:  metodo,
+        mesa_cerrada: true,
+        fecha_cierre: new Date().toISOString()
+      })
+      .eq("id", mesaSeleccionada.id);
 
-    // Limpiar mesa activa
+    if (errMesa) throw errMesa;
+
+    // 3. Limpiar estado local
     if (mesaSeleccionada) {
       mesaSeleccionada.carrito       = [];
       mesaSeleccionada.descuento     = 0;
       mesaSeleccionada.descuentoDesc = "";
     }
-    document.getElementById("discount").value = "";
+    document.getElementById("discount").value     = "";
     document.getElementById("discountDesc").value = "";
     currentDiscount = 0;
     localStorage.removeItem("carrito"); // compatibilidad legacy
-    saveMesas();
     updateTotal();
     applyFilters();
     closeDrawer();
     showToast("Pago procesado (" + metodo + ")", "success");
     playSuccessSound();
-    // Volver a mesas después de un breve delay para que se vea el toast
     setTimeout(() => volverAMesas(), 900);
-  } catch {
+  } catch (err) {
+    console.error("Error al procesar pago:", err);
     showToast("Error al procesar el pago. Intente nuevamente.", "error");
   } finally {
     showPayLoader(false);
@@ -1515,10 +1570,33 @@ async function cargarVentas() {
   document.getElementById("reportSubtitle").textContent = "Actualizando...";
 
   try {
-    const data = await fetch(API + "?action=reporte").then(r => r.json());
-    ventasCache = Array.isArray(data) ? data : [];
+    const { data, error } = await supabase_res
+      .from("ventas")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Aplanar items de cada venta para el formato que espera renderReporte()
+    ventasCache = [];
+    (data || []).forEach(venta => {
+      const items = Array.isArray(venta.items) ? venta.items : [];
+      items.forEach(item => {
+        ventasCache.push({
+          fecha:    venta.created_at,
+          metodo:   venta.metodo_pago,
+          nombre:   item.nombre,
+          cantidad: item.cantidad,
+          precio:   item.precio,
+          total:    item.total,
+          mesa:     item.mesa || ""
+        });
+      });
+    });
+
     renderReporte();
   } catch (e) {
+    console.error("Error cargando ventas:", e);
     content.innerHTML = `
       <div class="report-empty">
         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
@@ -1854,27 +1932,29 @@ async function guardarProducto() {
   btn.classList.add("loading");
 
   try {
-    const action = id ? "editarProducto" : "agregarProducto";
-    const payload = { action, token: POSTOKEN, nombre, descripcion, precio, categoria };
-    if (id) payload.id = id;
-
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(JSON.stringify(payload))
-    }).then(r => r.json());
-
-    if (res.ok) {
-      showToast(id ? "Producto actualizado: " + nombre : "Producto agregado: " + nombre, "success");
-      closeProductModal();
-      localStorage.removeItem("productos");
-      localStorage.removeItem("productos_timestamp");
-      cargarProductosSupabase(true);
+    if (id) {
+      // Editar producto existente
+      const { error } = await supabase_res
+        .from("productos")
+        .update({ nombre, descripcion, precio, categoria })
+        .eq("id", id);
+      if (error) throw error;
     } else {
-      showToast("Error: " + (res.error || "no se pudo guardar"), "error");
+      // Agregar producto nuevo
+      const { error } = await supabase_res
+        .from("productos")
+        .insert({ nombre, descripcion, precio, categoria, activo: true });
+      if (error) throw error;
     }
-  } catch {
-    showToast("No se pudo conectar. Intentá nuevamente.", "error");
+
+    showToast(id ? "Producto actualizado: " + nombre : "Producto agregado: " + nombre, "success");
+    closeProductModal();
+    localStorage.removeItem("productos");
+    localStorage.removeItem("productos_timestamp");
+    cargarProductosSupabase(true);
+  } catch (err) {
+    console.error("Error guardando producto:", err);
+    showToast("No se pudo guardar el producto. Intentá nuevamente.", "error");
   } finally {
     btn.disabled = false;
     btn.classList.remove("loading");
@@ -1889,24 +1969,22 @@ async function eliminarProducto() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: "data=" + encodeURIComponent(JSON.stringify({ action: "eliminarProducto", token: POSTOKEN, id: editingProductId }))
-    }).then(r => r.json());
+    // Soft delete: marcar como inactivo en Supabase
+    const { error } = await supabase_res
+      .from("productos")
+      .update({ activo: false })
+      .eq("id", editingProductId);
 
-    if (res.ok) {
-      showToast("Producto eliminado.", "success");
-      closeProductModal();
-      localStorage.removeItem("productos");
-      localStorage.removeItem("productos_timestamp");
-      //cargarProductosSupabase(true);
-      recargarProductos(true);
-    } else {
-      showToast("Error: " + (res.error || "no se pudo eliminar"), "error");
-    }
-  } catch {
-    showToast("No se pudo conectar. Intentá nuevamente.", "error");
+    if (error) throw error;
+
+    showToast("Producto eliminado.", "success");
+    closeProductModal();
+    localStorage.removeItem("productos");
+    localStorage.removeItem("productos_timestamp");
+    recargarProductos(true);
+  } catch (err) {
+    console.error("Error eliminando producto:", err);
+    showToast("No se pudo eliminar el producto. Intentá nuevamente.", "error");
   } finally {
     btn.disabled = false;
   }
@@ -1919,14 +1997,27 @@ async function generarRespaldo() {
   btn.classList.add("loading");
 
   try {
-    const res = await fetch(API + "?action=backup").then(r => r.json());
-    if (res.ok) {
-      showToast("Respaldo creado: " + res.nombre, "success");
-    } else {
-      showToast("Error al crear el respaldo: " + (res.error || "desconocido"), "error");
-    }
-  } catch {
-    showToast("No se pudo conectar para crear el respaldo.", "error");
+    // Exportar ventas desde Supabase como JSON descargable
+    const { data, error } = await supabase_res
+      .from("ventas")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    const fecha = new Date().toISOString().slice(0, 10);
+    a.href     = url;
+    a.download = `respaldo_ventas_${fecha}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast("Respaldo descargado correctamente.", "success");
+  } catch (err) {
+    console.error("Error en respaldo:", err);
+    showToast("Error al generar el respaldo.", "error");
   } finally {
     btn.disabled = false;
     btn.classList.remove("loading");
@@ -1994,11 +2085,20 @@ function cerrarNombreModal() {
   mesaEditando = null;
 }
 
-function guardarNombreMesa() {
+async function guardarNombreMesa() {
   if (!mesaEditando) return;
   const val = document.getElementById("nombreModalInput").value.trim();
   mesaEditando.nombre = val;
-  saveMesas();
+
+  // Persistir nombre en Supabase si la mesa tiene id
+  if (mesaEditando.id) {
+    const { error } = await supabase_res
+      .from("mesas")
+      .update({ nombre: val })
+      .eq("id", mesaEditando.id);
+    if (error) console.error("Error guardando nombre de mesa:", error);
+  }
+
   cerrarNombreModal();
   renderMesas();
 }
