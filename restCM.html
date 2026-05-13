@@ -14,7 +14,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+<script type="module">
+  // Importar bcryptjs como ES module y exponerlo como global window.bcrypt
+  import bcryptjs from "https://esm.sh/bcryptjs@2.4.3";
+  window.bcrypt = bcryptjs;
+  // Disparar evento para que el login sepa que bcrypt ya está listo
+  window.dispatchEvent(new Event("bcrypt-ready"));
+</script>
 <script src="config.js"></script>
 <link rel="stylesheet" href="pos.css">
 <style>
@@ -640,8 +646,19 @@ async function doLogin() {
 
     const usuario = usuarios[0];
 
-    // Verificar password con bcrypt
-    const match = await bcrypt.compare(passInput, usuario.password_hash);
+    // Verificar password con bcrypt (cargado como ES module en window.bcrypt)
+    if (!window.bcrypt) {
+      // Esperar hasta 3 segundos a que cargue el módulo
+      await new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error("bcrypt timeout")), 3000);
+        window.addEventListener("bcrypt-ready", () => { clearTimeout(t); resolve(); }, { once: true });
+      }).catch(() => {});
+    }
+    if (!window.bcrypt) {
+      errorEl.textContent = "Error interno: módulo de seguridad no disponible. Recargá la página.";
+      return;
+    }
+    const match = await window.bcrypt.compare(passInput, usuario.password_hash);
     if (!match) {
       errorEl.textContent = "Usuario o contraseña incorrectos.";
       return;
