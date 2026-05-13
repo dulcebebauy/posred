@@ -880,10 +880,21 @@ function iniciarRealtimeMesas() {
           const remoteStr = JSON.stringify(carritoRemoto);
           if (localStr !== remoteStr) {
             mesaSeleccionada.carrito = carritoRemoto;
-            updateTotal();
-            applyFilters();
-            if (drawerOpen) renderCartItems();
-            showToast("Carrito actualizado desde otro dispositivo", "info");
+
+            // Refrescar FAB, badges de cantidad en cards y totales
+            updateTotal();    // actualiza FAB badge, total header, botones de pago
+            applyFilters();   // re-renderiza cards con cantidades correctas
+
+            // Refrescar drawer siempre (aunque esté cerrado, para que al abrirlo esté al día)
+            renderCartItems();
+
+            // Si la mesa fue cerrada/vaciada desde otro dispositivo, cerrar drawer
+            if (carritoRemoto.length === 0 && drawerOpen) {
+              closeDrawer();
+              showToast("Mesa cerrada desde otro dispositivo", "info");
+            } else {
+              showToast("Carrito actualizado desde otro dispositivo", "info");
+            }
           }
         }
       }
