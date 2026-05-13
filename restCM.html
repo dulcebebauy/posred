@@ -708,6 +708,7 @@ function tieneRol(...roles) {
 
 function doLogout() {
   if (!confirm("¿Cerrar sesión?")) return;
+  detenerPolling();
   detenerRealtime();
   localStorage.removeItem("session_user");
   // legado
@@ -947,8 +948,76 @@ let currentDiscount = 0;
 let mesas = [];
 let mesaSeleccionada = null;
 
-/* ========== REALTIME SYNC ========== */
-let realtimeChannel = null;
+/* ========== REALTIME + POLLING SYNC ========== */
+let realtimeChannel  = null;
+let pollingInterval  = null;
+const POLLING_MS     = 4000; // cada 4 segundos
+
+/* Aplica datos remotos de una mesa al estado local y refresca toda la UI */
+function aplicarSyncMesa(mesaFresh) {
+  if (!mesaFresh) return;
+
+  // Actualizar array global de mesas
+  const idx = mesas.findIndex(m => m.id === mesaFresh.id);
+  if (idx !== -1) {
+    mesas[idx].carrito  = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
+    mesas[idx].descuento = mesaFresh.descuento || 0;
+    mesas[idx].nombre   = mesaFresh.nombre || mesas[idx].nombre;
+    mesas[idx].ocupada  = !mesaFresh.mesa_cerrada;
+  }
+
+  // Si hay una mesa seleccionada y es la que cambió
+  if (mesaSeleccionada && mesaSeleccionada.id === mesaFresh.id) {
+    const carritoRemoto = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
+    const localStr  = JSON.stringify(mesaSeleccionada.carrito);
+    const remoteStr = JSON.stringify(carritoRemoto);
+
+    if (localStr !== remoteStr) {
+      mesaSeleccionada.carrito = carritoRemoto;
+
+      // Forzar re-render completo
+      updateTotal();
+      applyFilters();
+      renderCartItems();
+
+      if (carritoRemoto.length === 0 && drawerOpen) {
+        closeDrawer();
+        showToast("Mesa cerrada desde otro dispositivo", "info");
+      } else if (carritoRemoto.length > 0) {
+        showToast("Carrito actualizado desde otro dispositivo", "info");
+      }
+    }
+  }
+}
+
+/* Polling: consulta el estado de la mesa activa cada POLLING_MS ms */
+function iniciarPolling() {
+  detenerPolling();
+  pollingInterval = setInterval(async () => {
+    // Solo si estamos dentro de una mesa
+    if (!mesaSeleccionada) return;
+    const posApp = document.getElementById("posApp");
+    if (!posApp || posApp.style.display === "none") return;
+
+    try {
+      const { data, error } = await supabase_res
+        .from("mesas")
+        .select("id, carrito, descuento, nombre, mesa_cerrada")
+        .eq("id", mesaSeleccionada.id)
+        .single();
+      if (!error && data) aplicarSyncMesa(data);
+    } catch (e) {
+      console.warn("[Polling] Error:", e);
+    }
+  }, POLLING_MS);
+}
+
+function detenerPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
 
 /**
  * Suscribe a cambios en tiempo real de la tabla mesas via Supabase Realtime.
@@ -972,8 +1041,7 @@ function iniciarRealtimeMesas() {
         const cambioId = (payload.new || payload.old || {}).id;
         if (!cambioId) return;
 
-        // Siempre hacer fetch directo para garantizar datos completos
-        // (payload.new puede no incluir campos JSONB sin REPLICA IDENTITY FULL)
+        // Fetch directo para garantizar datos completos (JSONB puede venir incompleto en payload)
         const { data: mesaFresh, error } = await supabase_res
           .from("mesas")
           .select("id, carrito, descuento, nombre, mesa_cerrada")
@@ -982,44 +1050,22 @@ function iniciarRealtimeMesas() {
 
         if (error || !mesaFresh) return;
 
-        // Actualizar array local de mesas
-        const idx = mesas.findIndex(m => m.id === cambioId);
-        if (idx !== -1) {
-          mesas[idx].carrito   = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
-          mesas[idx].descuento = mesaFresh.descuento || 0;
-          mesas[idx].nombre    = mesaFresh.nombre || mesas[idx].nombre;
-          mesas[idx].ocupada   = !mesaFresh.mesa_cerrada;
-        }
-
-        // Si estamos en pantalla de mesas: refrescar grid
+        // Pantalla de mesas: solo refrescar grid
         const mesasScreen = document.getElementById("mesasScreen");
         if (mesasScreen && mesasScreen.style.display !== "none") {
+          const idx = mesas.findIndex(m => m.id === cambioId);
+          if (idx !== -1) {
+            mesas[idx].carrito  = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
+            mesas[idx].descuento = mesaFresh.descuento || 0;
+            mesas[idx].nombre   = mesaFresh.nombre || mesas[idx].nombre;
+            mesas[idx].ocupada  = !mesaFresh.mesa_cerrada;
+          }
           renderMesas();
           return;
         }
 
-        // Si estamos dentro de una mesa y el cambio es para esa mesa
-        if (mesaSeleccionada && cambioId === mesaSeleccionada.id) {
-          const carritoRemoto = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
-
-          // Solo aplicar si el carrito remoto es diferente al local
-          const localStr  = JSON.stringify(mesaSeleccionada.carrito);
-          const remoteStr = JSON.stringify(carritoRemoto);
-          if (localStr !== remoteStr) {
-            mesaSeleccionada.carrito = carritoRemoto;
-
-            updateTotal();
-            applyFilters();
-            renderCartItems();
-
-            if (carritoRemoto.length === 0 && drawerOpen) {
-              closeDrawer();
-              showToast("Mesa cerrada desde otro dispositivo", "info");
-            } else {
-              showToast("Carrito actualizado desde otro dispositivo", "info");
-            }
-          }
-        }
+        // Dentro de una mesa: usar helper compartido con polling
+        aplicarSyncMesa(mesaFresh);
       }
     )
     .subscribe((status) => {
@@ -1245,10 +1291,14 @@ async function seleccionarMesa(mesa) {
 
   updateTotal();
   applyFilters();
+
+  // Iniciar polling para esta mesa
+  iniciarPolling();
 }
 
 function volverAMesas() {
-  
+  detenerPolling();
+
   // Guardar descuento de la mesa activa en Supabase
   if (mesaSeleccionada) {
     mesaSeleccionada.descuento      = parseFloat(document.getElementById("discount").value) || 0;
