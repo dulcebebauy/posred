@@ -159,11 +159,8 @@
 .rol-badge.cajero      { background: #0ea5e9; }
 .rol-badge.administrador { background: #7c3aed; }
 /* Ocultar elementos por rol */
-.solo-cajero-admin { display: none !important; }
-.solo-admin        { display: none !important; }
-body.rol-cajero      .solo-cajero-admin  { display: inline-flex !important; }
-body.rol-administrador .solo-cajero-admin { display: inline-flex !important; }
-body.rol-administrador .solo-admin        { display: inline-flex !important; }
+.solo-admin { display: none !important; }
+body.rol-administrador .solo-admin { display: inline-flex !important; }
 </style>
 </head>
 <audio id="successSound" src="success_premium.mp3" preload="auto"></audio>  
@@ -377,13 +374,13 @@ body.rol-administrador .solo-admin        { display: inline-flex !important; }
       </div>
     </div>
 
-    <div class="pay-row" id="payRow">
-      <button class="pay-btn cash   solo-cajero-admin" onclick="abrirCambio('efectivo')" id="btnEfectivo" disabled>Efectivo</button>
-      <button class="pay-btn debit  solo-cajero-admin" onclick="pagar('debito')"   id="btnDebito"   disabled>Débito</button>
-      <button class="pay-btn credit solo-cajero-admin" onclick="pagar('credito')"  id="btnCredito"  disabled>Crédito</button>
+    <div class="pay-row" id="payRow" style="display:none;">
+      <button class="pay-btn cash"   onclick="abrirCambio('efectivo')" id="btnEfectivo" disabled>Efectivo</button>
+      <button class="pay-btn debit"  onclick="pagar('debito')"   id="btnDebito"   disabled>Débito</button>
+      <button class="pay-btn credit" onclick="pagar('credito')"  id="btnCredito"  disabled>Crédito</button>
     </div>
 
-    <button class="clear-btn solo-cajero-admin" id="clearBtn" onclick="clearCart()" disabled>Vaciar carrito</button>
+    <button class="clear-btn" id="clearBtn" onclick="clearCart()" disabled style="display:none;">Vaciar carrito</button>
   </div>
 </div>
 
@@ -696,6 +693,13 @@ function aplicarRol(rol) {
     badge.textContent = labels[rol] || rol;
     badge.className   = "rol-badge " + rol;
   }
+
+  // Mostrar/ocultar botones de pago según rol (preservando el flex original del pay-row)
+  const puedecobrar = (rol === "cajero" || rol === "administrador");
+  const payRow  = document.getElementById("payRow");
+  const clearBtn = document.getElementById("clearBtn");
+  if (payRow)  payRow.style.display  = puedecobrar ? "" : "none";
+  if (clearBtn) clearBtn.style.display = puedecobrar ? "" : "none";
 }
 
 function tieneRol(...roles) {
