@@ -960,23 +960,35 @@ function iniciarRealtimeMesas() {
     supabase_res.removeChannel(realtimeChannel);
   }
 
+  // Canal único por sesión para evitar conflictos entre dispositivos
+  const canalId = "mesas-cambios-" + Math.random().toString(36).slice(2, 8);
+
   realtimeChannel = supabase_res
-    .channel("mesas-cambios")
+    .channel(canalId)
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "mesas" },
-      (payload) => {
-        const cambio = payload.new || payload.old;
-        if (!cambio) return;
+      async (payload) => {
+        const cambioId = (payload.new || payload.old || {}).id;
+        if (!cambioId) return;
+
+        // Siempre hacer fetch directo para garantizar datos completos
+        // (payload.new puede no incluir campos JSONB sin REPLICA IDENTITY FULL)
+        const { data: mesaFresh, error } = await supabase_res
+          .from("mesas")
+          .select("id, carrito, descuento, nombre, mesa_cerrada")
+          .eq("id", cambioId)
+          .single();
+
+        if (error || !mesaFresh) return;
 
         // Actualizar array local de mesas
-        const idx = mesas.findIndex(m => m.id === cambio.id);
-        if (idx !== -1 && payload.new) {
-          const remote = payload.new;
-          mesas[idx].carrito   = Array.isArray(remote.carrito) ? remote.carrito : [];
-          mesas[idx].descuento = remote.descuento || 0;
-          mesas[idx].nombre    = remote.nombre || mesas[idx].nombre;
-          mesas[idx].ocupada   = !remote.mesa_cerrada;
+        const idx = mesas.findIndex(m => m.id === cambioId);
+        if (idx !== -1) {
+          mesas[idx].carrito   = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
+          mesas[idx].descuento = mesaFresh.descuento || 0;
+          mesas[idx].nombre    = mesaFresh.nombre || mesas[idx].nombre;
+          mesas[idx].ocupada   = !mesaFresh.mesa_cerrada;
         }
 
         // Si estamos en pantalla de mesas: refrescar grid
@@ -987,9 +999,8 @@ function iniciarRealtimeMesas() {
         }
 
         // Si estamos dentro de una mesa y el cambio es para esa mesa
-        if (mesaSeleccionada && cambio.id === mesaSeleccionada.id && payload.new) {
-          const remote = payload.new;
-          const carritoRemoto = Array.isArray(remote.carrito) ? remote.carrito : [];
+        if (mesaSeleccionada && cambioId === mesaSeleccionada.id) {
+          const carritoRemoto = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
 
           // Solo aplicar si el carrito remoto es diferente al local
           const localStr  = JSON.stringify(mesaSeleccionada.carrito);
@@ -997,14 +1008,10 @@ function iniciarRealtimeMesas() {
           if (localStr !== remoteStr) {
             mesaSeleccionada.carrito = carritoRemoto;
 
-            // Refrescar FAB, badges de cantidad en cards y totales
-            updateTotal();    // actualiza FAB badge, total header, botones de pago
-            applyFilters();   // re-renderiza cards con cantidades correctas
-
-            // Refrescar drawer siempre (aunque esté cerrado, para que al abrirlo esté al día)
+            updateTotal();
+            applyFilters();
             renderCartItems();
 
-            // Si la mesa fue cerrada/vaciada desde otro dispositivo, cerrar drawer
             if (carritoRemoto.length === 0 && drawerOpen) {
               closeDrawer();
               showToast("Mesa cerrada desde otro dispositivo", "info");
@@ -1016,9 +1023,7 @@ function iniciarRealtimeMesas() {
       }
     )
     .subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        console.log("[Realtime] Suscripto a cambios de mesas");
-      }
+      console.log("[Realtime] Estado del canal:", status);
     });
 }
 
