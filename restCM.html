@@ -972,7 +972,7 @@ function aplicarSyncMesa(mesaFresh) {
     const localStr  = JSON.stringify(mesaSeleccionada.carrito);
     const remoteStr = JSON.stringify(carritoRemoto);
 
-    if (localStr !== remoteStr) {
+    //if (localStr !== remoteStr) {
       mesaSeleccionada.carrito = carritoRemoto;
 
       // Forzar re-render completo
@@ -986,7 +986,7 @@ function aplicarSyncMesa(mesaFresh) {
       } else if (carritoRemoto.length > 0) {
         showToast("Carrito actualizado desde otro dispositivo", "info");
       }
-    }
+    //}
   }
 }
 
