@@ -959,7 +959,8 @@ function renderMesas() {
 
     grid.appendChild(div);
   });
-  stateEl.style.display = "flex";
+  const stateEl = document.getElementById("stateCenter");
+  stateEl.style.display = "none";
 }
 
 function seleccionarMesa(mesa) {
