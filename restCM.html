@@ -161,13 +161,9 @@
 /* Ocultar elementos por rol */
 .solo-cajero-admin { display: none !important; }
 .solo-admin        { display: none !important; }
-/* pay-row es un div flex */
-body.rol-cajero      div.solo-cajero-admin  { display: flex !important; }
-body.rol-administrador div.solo-cajero-admin { display: flex !important; }
-/* botones son inline-flex */
-body.rol-cajero      button.solo-cajero-admin  { display: inline-flex !important; }
-body.rol-administrador button.solo-cajero-admin { display: inline-flex !important; }
-body.rol-administrador button.solo-admin        { display: inline-flex !important; }
+body.rol-cajero      .solo-cajero-admin  { display: inline-flex !important; }
+body.rol-administrador .solo-cajero-admin { display: inline-flex !important; }
+body.rol-administrador .solo-admin        { display: inline-flex !important; }
 </style>
 </head>
 <audio id="successSound" src="success_premium.mp3" preload="auto"></audio>  
@@ -381,13 +377,13 @@ body.rol-administrador button.solo-admin        { display: inline-flex !importan
       </div>
     </div>
 
-    <div class="pay-row solo-cajero-admin" id="payRow">
-      <button class="pay-btn cash"   onclick="abrirCambio('efectivo')" id="btnEfectivo" disabled>Efectivo</button>
-      <button class="pay-btn debit"  onclick="pagar('debito')"   id="btnDebito"   disabled>Débito</button>
-      <button class="pay-btn credit" onclick="pagar('credito')"  id="btnCredito"  disabled>Crédito</button>
+    <div class="pay-row" id="payRow">
+      <button class="pay-btn cash   solo-cajero-admin" onclick="abrirCambio('efectivo')" id="btnEfectivo" disabled>Efectivo</button>
+      <button class="pay-btn debit  solo-cajero-admin" onclick="pagar('debito')"   id="btnDebito"   disabled>Débito</button>
+      <button class="pay-btn credit solo-cajero-admin" onclick="pagar('credito')"  id="btnCredito"  disabled>Crédito</button>
     </div>
 
-    <button class="clear-btn" id="clearBtn" onclick="clearCart()" disabled>Vaciar carrito</button>
+    <button class="clear-btn solo-cajero-admin" id="clearBtn" onclick="clearCart()" disabled>Vaciar carrito</button>
   </div>
 </div>
 
