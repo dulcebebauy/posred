@@ -959,6 +959,7 @@ function renderMesas() {
 
     grid.appendChild(div);
   });
+  stateEl.style.display = "flex";
 }
 
 function seleccionarMesa(mesa) {
@@ -990,6 +991,10 @@ function seleccionarMesa(mesa) {
 }
 
 function volverAMesas() {
+  const stateEl = document.getElementById("stateCenter");
+  stateEl.style.display = "flex";
+  stateEl.innerHTML = '<div class="spinner"></div>';
+  
   // Guardar descuento de la mesa activa en Supabase
   if (mesaSeleccionada) {
     mesaSeleccionada.descuento      = parseFloat(document.getElementById("discount").value) || 0;
