@@ -159,12 +159,15 @@
 .rol-badge.cajero      { background: #0ea5e9; }
 .rol-badge.administrador { background: #7c3aed; }
 /* Ocultar elementos por rol */
-.solo-cajero-admin { display: none; }
-.solo-admin        { display: none; }
-body.rol-cajero      .solo-cajero-admin { display: revert; }
-body.rol-cajero      .solo-admin        { display: none !important; }
-body.rol-administrador .solo-cajero-admin { display: revert; }
-body.rol-administrador .solo-admin        { display: revert; }
+.solo-cajero-admin { display: none !important; }
+.solo-admin        { display: none !important; }
+/* pay-row es un div flex */
+body.rol-cajero      div.solo-cajero-admin  { display: flex !important; }
+body.rol-administrador div.solo-cajero-admin { display: flex !important; }
+/* botones son inline-flex */
+body.rol-cajero      button.solo-cajero-admin  { display: inline-flex !important; }
+body.rol-administrador button.solo-cajero-admin { display: inline-flex !important; }
+body.rol-administrador button.solo-admin        { display: inline-flex !important; }
 </style>
 </head>
 <audio id="successSound" src="success_premium.mp3" preload="auto"></audio>  
