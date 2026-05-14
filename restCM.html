@@ -951,7 +951,7 @@ let mesaSeleccionada = null;
 /* ========== REALTIME + POLLING SYNC ========== */
 let realtimeChannel  = null;
 let pollingInterval  = null;
-const POLLING_MS     = 4000; // cada 4 segundos
+const POLLING_MS     = 10000; // cada 4 segundos
 
 /* Aplica datos remotos de una mesa al estado local y refresca toda la UI */
 function aplicarSyncMesa(mesaFresh) {
