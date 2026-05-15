@@ -1324,7 +1324,7 @@ function saveCart() {
 }
 */
 let saveTimeout = null;
-
+/*
 async function saveCart() {
 
   if (!mesaSeleccionada) return;
@@ -1425,7 +1425,68 @@ function mergeCarritos(remoto, local) {
 
   return Array.from(mapa.values());
 }
-  
+*/
+let saveTimeout = null;
+let savingCart = false;
+
+async function saveCart() {
+
+  if (!mesaSeleccionada) return;
+
+  clearTimeout(saveTimeout);
+
+  saveTimeout = setTimeout(async () => {
+
+    if (savingCart) return;
+
+    savingCart = true;
+
+    try {
+
+      const subtotal = carrito.reduce(
+        (s, i) => s + (i.precio * i.cantidad),
+        0
+      );
+
+      const descuento = parseFloat(
+        document.getElementById("discount").value
+      ) || 0;
+
+      const total = subtotal - (
+        subtotal * descuento / 100
+      );
+
+      const carritoClonado = JSON.parse(
+        JSON.stringify(carrito)
+      );
+
+      const { error } = await supabase_res
+        .from("mesas")
+        .update({
+          carrito: carritoClonado,
+          subtotal,
+          descuento,
+          total,
+          mesa_cerrada: carritoClonado.length === 0
+        })
+        .eq("id", mesaSeleccionada.id);
+
+      if (error) {
+        console.error(error);
+      }
+
+    } catch (err) {
+
+      console.error(err);
+
+    } finally {
+
+      savingCart = false;
+
+    }
+
+  }, 120);
+      }
 function loadCart() {
   // No-op: el carrito se carga al seleccionar la mesa
 }
