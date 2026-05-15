@@ -537,8 +537,25 @@
 
 <!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module">
 
+import { createClient }
+from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+const SUPABASE_URL =
+  "https://vrptuoncsmgtzwkoodee.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_YiPcokZRtA-8fKkq8eMW9w_YCSnw84j";
+
+window.supabase_res = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+</script>
 <script>
+/*
 const SUPABASE_URL = "https://vrptuoncsmgtzwkoodee.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YiPcokZRtA-8fKkq8eMW9w_YCSnw84j";
 
@@ -546,7 +563,7 @@ const supabase_res = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
-
+*/
 let mesasChannel = null;
 let usuarioActual = null;
 
