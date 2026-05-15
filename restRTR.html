@@ -150,8 +150,12 @@
     <p class="login-sub">Ingresá tus credenciales para continuar</p>
 
     <div class="login-field">
+      <!--
       <label for="loginUser">Usuario</label>
       <input type="text" id="loginUser" placeholder="Usuario" autocomplete="username" autocapitalize="none">
+      -->
+      <label for="loginUser">Email</label>
+      <input type="email" id="loginUser">
     </div>
 
     <div class="login-field">
@@ -185,7 +189,10 @@
       </svg>
     </button>
     <div style="font-size:17px;font-weight:700;color:var(--fg,#0f172a);letter-spacing:-0.3px;">Mesas</div>
-    <button class="report-btn" onclick="openReport()" title="Reporte de ventas">
+    <button class="report-btn" id="reportBtn" onclick="openReport()"
+    <!--
+      <button class="report-btn" onclick="openReport()" title="Reporte de ventas"> 
+    -->
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
         <path d="M2 20h20"/>
@@ -541,6 +548,7 @@ const supabase_res = window.supabase.createClient(
 );
 
 let mesasChannel = null;
+let usuarioActual = null;
 
 function iniciarRealtimeMesas() {
 
@@ -637,12 +645,38 @@ function mapMesa(m) {
 const POSTOKEN = localStorage.getItem("user") + "_" + localStorage.getItem("pass");
 
 /* ========== AUTH ========== */
+/*
 function checkSession() {
   return localStorage.getItem("session") === "active"
         && ((localStorage.getItem("user") != null && localStorage.getItem("user") != "")
         && (localStorage.getItem("pass") != null && localStorage.getItem("pass") != ""));
 }
+*/
+async function checkSession() {
 
+  const { data } = await supabase_res.auth.getSession();
+
+  if (!data.session) {
+    return false;
+  }
+
+  const user = data.session.user;
+
+  const { data: usuario } = await supabase_res
+    .from("usuarios")
+    .select("*")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (!usuario || !usuario.activo) {
+    return false;
+  }
+
+  usuarioActual = usuario;
+
+  return true;
+}
+/*
 async function doLogin() {
   const userInput = document.getElementById("loginUser").value.trim();
   const passInput = document.getElementById("loginPass").value;
@@ -670,7 +704,67 @@ async function doLogin() {
   showMesasScreen();
   cargarProductosSupabase();
 }
+*/
+async function doLogin() {
 
+  const email = document.getElementById("loginUser").value.trim();
+  const password = document.getElementById("loginPass").value;
+
+  const errorEl = document.getElementById("loginError");
+
+  errorEl.textContent = "";
+
+  if (!email) {
+    errorEl.textContent = "Ingresá el email";
+    return;
+  }
+
+  if (!password) {
+    errorEl.textContent = "Ingresá la contraseña";
+    return;
+  }
+
+  const { data, error } =
+    await supabase_res.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if (error) {
+    errorEl.textContent = "Credenciales inválidas";
+    return;
+  }
+
+  const user = data.user;
+
+  const { data: usuario, error: errorUsuario } =
+    await supabase_res
+      .from("usuarios")
+      .select("*")
+      .eq("auth_user_id", user.id)
+      .single();
+
+  if (errorUsuario || !usuario) {
+    errorEl.textContent = "Usuario sin permisos";
+    return;
+  }
+
+  if (!usuario.activo) {
+    errorEl.textContent = "Usuario inactivo";
+    return;
+  }
+
+  usuarioActual = usuario;
+
+  await initMesas();
+
+  iniciarRealtimeMesas();
+
+  showMesasScreen();
+
+  cargarProductosSupabase();
+}
+/*
 function doLogout() {
   if (!confirm("¿Cerrar sesión?")) return;
   localStorage.removeItem("session");
@@ -680,7 +774,21 @@ function doLogout() {
   mesas = [];
   showLogin();
 }
+*/
+async function doLogout() {
 
+  if (!confirm("¿Cerrar sesión?")) return;
+
+  await supabase_res.auth.signOut();
+
+  usuarioActual = null;
+
+  mesaSeleccionada = null;
+
+  mesas = [];
+
+  showLogin();
+}
 function showLogin() {
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("posApp").style.display = "none";
@@ -806,13 +914,30 @@ document.addEventListener("DOMContentLoaded", async function() {
   document.getElementById("loginPass").addEventListener("keydown", function(e) {
     if (e.key === "Enter") doLogin();
   });
-
+  /*
   if (checkSession()) {
     await initMesas();
     iniciarRealtimeMesas();
     showMesasScreen();
     cargarProductosSupabase();
   } else {
+    showLogin();
+  }
+  */
+  const logged = await checkSession();
+
+  if (logged) {
+
+    await initMesas();
+
+    iniciarRealtimeMesas();
+
+    showMesasScreen();
+
+    cargarProductosSupabase();
+
+  } else {
+
     showLogin();
   }
 });
@@ -845,7 +970,29 @@ function showToast(msg, type = "success") {
   wrap.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
+function esAdministrador() {
+  return usuarioActual?.rol === "administrador";
+}
 
+function esCajero() {
+  return usuarioActual?.rol === "cajero";
+}
+
+function esMozo() {
+  return usuarioActual?.rol === "mozo";
+}
+
+function puedeCobrar() {
+  return esAdministrador() || esCajero();
+}
+
+function puedeEditarProductos() {
+  return esAdministrador();
+}
+
+function puedeVerReportes() {
+  return esAdministrador();
+}
 /* ========== FILTRO DE CATEGORÍA ========== */
 let activeCatFilter = "todos";
 
@@ -971,6 +1118,11 @@ function saveMesas() {
 
 /* -------- PANTALLA DE MESAS -------- */
 function showMesasScreen() {
+  document.getElementById("reportBtn").style.display =
+  puedeVerReportes()
+    ? "inline-flex"
+    : "none";
+  
   const stateEl = document.getElementById("stateCenter");
   stateEl.style.display = "flex";
   stateEl.innerHTML = '<div class="spinner"></div>';
@@ -1179,6 +1331,9 @@ function renderProductos(lista = productos) {
         didLongPress = true;
         div.classList.remove("long-pressing");
         navigator.vibrate?.(50);
+        if (!puedeEditarProductos()) {
+          return;
+        }
         openProductModal(p);
       }, 580);
     };
@@ -1205,6 +1360,9 @@ function renderProductos(lista = productos) {
     div.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       cancelLongPress();
+      if (!puedeEditarProductos()) {
+        return;
+      }
       openProductModal(p);
     });
 
@@ -1598,7 +1756,7 @@ function updateDrawerTotal() {
     totalEl.classList.toggle("active", total > 0);
   }
 }
-
+/*
 function updatePayButtons() {
   const disabled = carrito.length === 0;
   ["btnEfectivo", "btnDebito", "btnCredito", "clearBtn"].forEach(id => {
@@ -1606,7 +1764,34 @@ function updatePayButtons() {
     if (el) el.disabled = disabled;
   });
 }
+*/
+function updatePayButtons() {
 
+  const disabled =
+    carrito.length === 0 || !puedeCobrar();
+
+  ["btnEfectivo", "btnDebito", "btnCredito"]
+    .forEach(id => {
+
+      const el = document.getElementById(id);
+
+      if (!el) return;
+
+      el.disabled = disabled;
+
+      el.style.display =
+        puedeCobrar()
+          ? "inline-flex"
+          : "none";
+    });
+
+  const clearBtn =
+    document.getElementById("clearBtn");
+
+  if (clearBtn) {
+    clearBtn.disabled = carrito.length === 0;
+  }
+}
 /* ========== CALCULADORA DE VUELTO ========== */
 let cambioMetodo = "efectivo";
 
@@ -1616,6 +1801,10 @@ function calcularTotalActual() {
 }
 
 function abrirCambio(metodo) {
+  if (!puedeCobrar()) {
+    showToast("No tienes permisos", "error");
+    return;
+  }
   if (carrito.length === 0) return;
   cambioMetodo = metodo;
 
@@ -1714,6 +1903,10 @@ function confirmarPagoEfectivo() {
 
 /* ========== PAGO ========== */
 async function pagar(metodo) {
+  if (!puedeCobrar()) {
+    showToast("No tienes permisos", "error");
+    return;
+  }
   if (carrito.length === 0) return;
 
   const desc = document.getElementById("discountDesc").value || "Sin descripción";
