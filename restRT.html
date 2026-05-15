@@ -809,6 +809,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
   if (checkSession()) {
     await initMesas();
+    iniciarRealtimeMesas();
     showMesasScreen();
     cargarProductosSupabase();
   } else {
