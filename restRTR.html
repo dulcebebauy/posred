@@ -571,6 +571,86 @@ const supabase_res = window.supabase.createClient(
   SUPABASE_KEY
 );
 
+let mesasChannel = null;
+
+function iniciarRealtimeMesas() {
+
+  if (mesasChannel) {
+    supabase_res.removeChannel(mesasChannel);
+  }
+
+  mesasChannel = supabase_res
+
+    .channel("mesas-realtime")
+
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "mesas"
+      },
+      payload => {
+
+        console.log("Realtime mesas:", payload);
+
+        const nuevaMesa = mapMesa(payload.new);
+
+        const idx = mesas.findIndex(
+          m => m.id === nuevaMesa.id
+        );
+
+        if (idx !== -1) {
+          mesas[idx] = nuevaMesa;
+        } else {
+          mesas.push(nuevaMesa);
+        }
+
+        mesas.sort((a, b) => a.numero - b.numero);
+
+        // Si esta mesa está abierta actualmente
+        if (
+          mesaSeleccionada &&
+          mesaSeleccionada.id === nuevaMesa.id
+        ) {
+
+          mesaSeleccionada = mesas.find(
+            m => m.id === nuevaMesa.id
+          );
+
+          updateTotal();
+
+          if (drawerOpen) {
+            renderCartItems();
+          }
+
+          applyFilters();
+        }
+
+        renderMesas();
+      }
+    )
+
+    .subscribe(status => {
+      console.log("Realtime status:", status);
+    });
+}
+
+function mapMesa(m) {
+
+  return {
+    id: m.id,
+    numero: m.numero,
+    nombre: m.nombre || `Mesa ${m.numero}`,
+    carrito: Array.isArray(m.carrito)
+      ? m.carrito
+      : [],
+    descuento: Number(m.descuento || 0),
+    descuentoDesc: "",
+    ocupada: !m.mesa_cerrada
+  };
+}
+
 // Supabase client inicializado correctamente
 </script>
 
