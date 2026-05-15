@@ -731,6 +731,7 @@ async function doLogin() {
     });
 
   if (error) {
+    alert(error.message);
     errorEl.textContent = "Credenciales inválidas";
     return;
   }
