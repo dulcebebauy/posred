@@ -14,13 +14,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script type="module">
-  // Importar bcryptjs como ES module y exponerlo como global window.bcrypt
-  import bcryptjs from "https://esm.sh/bcryptjs@2.4.3";
-  window.bcrypt = bcryptjs;
-  // Disparar evento para que el login sepa que bcrypt ya está listo
-  window.dispatchEvent(new Event("bcrypt-ready"));
-</script>
 <script src="config.js"></script>
 <link rel="stylesheet" href="pos.css">
 <style>
@@ -140,27 +133,6 @@
   color: #cbd5e1;
   margin-top: -2px;
 }
-/* Toast tipo info */
-.toast.info {
-  background: #0ea5e9;
-  color: #fff;
-}
-/* Badge de rol */
-.rol-badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .4px;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 6px;
-  color: #fff;
-}
-.rol-badge.mozo        { background: #64748b; }
-.rol-badge.cajero      { background: #0ea5e9; }
-.rol-badge.administrador { background: #7c3aed; }
-/* Ocultar elementos por rol */
-.solo-admin { display: none !important; }
-body.rol-administrador .solo-admin { display: inline-flex !important; }
 </style>
 </head>
 <audio id="successSound" src="success_premium.mp3" preload="auto"></audio>  
@@ -212,11 +184,8 @@ body.rol-administrador .solo-admin { display: inline-flex !important; }
         <line x1="21" y1="12" x2="9" y2="12"/>
       </svg>
     </button>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
-      <div style="font-size:17px;font-weight:700;color:var(--fg,#0f172a);letter-spacing:-0.3px;">Mesas</div>
-      <span id="headerRolBadge" class="rol-badge"></span>
-    </div>
-    <button class="report-btn solo-admin" id="btnReporte" onclick="openReport()" title="Reporte de ventas">
+    <div style="font-size:17px;font-weight:700;color:var(--fg,#0f172a);letter-spacing:-0.3px;">Mesas</div>
+    <button class="report-btn" onclick="openReport()" title="Reporte de ventas">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
         <path d="M2 20h20"/>
@@ -374,13 +343,13 @@ body.rol-administrador .solo-admin { display: inline-flex !important; }
       </div>
     </div>
 
-    <div class="pay-row" id="payRow" style="display:none;">
+    <div class="pay-row">
       <button class="pay-btn cash"   onclick="abrirCambio('efectivo')" id="btnEfectivo" disabled>Efectivo</button>
       <button class="pay-btn debit"  onclick="pagar('debito')"   id="btnDebito"   disabled>Débito</button>
       <button class="pay-btn credit" onclick="pagar('credito')"  id="btnCredito"  disabled>Crédito</button>
     </div>
 
-    <button class="clear-btn" id="clearBtn" onclick="clearCart()" disabled style="display:none;">Vaciar carrito</button>
+    <button class="clear-btn" id="clearBtn" onclick="clearCart()" disabled>Vaciar carrito</button>
   </div>
 </div>
 
@@ -433,7 +402,7 @@ body.rol-administrador .solo-admin { display: inline-flex !important; }
       </div>
     </div>
     <div class="report-header-row2">
-      <button class="add-product-btn solo-admin" onclick="openProductModal(null)" title="Agregar producto a la carta">
+      <button class="add-product-btn" onclick="openProductModal(null)" title="Agregar producto a la carta">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
         Producto
       </button>
@@ -651,6 +620,7 @@ function mapMesa(m) {
   };
 }
 
+  
 // Supabase client inicializado correctamente
 </script>
 
@@ -664,29 +634,19 @@ function mapMesa(m) {
 //"https://script.google.com/macros/s/AKfycbwZinHlc8-t5kFEn--QCb4WHIby99RyMyz1aFyy0CYSnltLriQvl9Ba0J5LQ2kUtrw_ng/exec";//API_DES;//"https://script.google.com/macros/s/AKfycbx-RaN4Lz01l5BBG4HYuX1ojuJDmaVcUFFc9XG74hdhL8GykYawG-qVfZ5owP4CKlzk/exec";
             //"https://script.google.com/macros/s/AKfycbxJHNsxRaFanBNNH802Ho27HauR_njyWLge_eV4RYZVzC0nNPpgVY7X0hoADMc4LISa/exec";
             //"https://script.google.com/macros/s/AKfycbxOTqH5t1J3Kfsc7EwVtTfSJiYFt_Fhj_RXWKVJCo9Dg7laloh5kTJqgqPIE4Bj09DG/exec";
-/* ========== AUTH CON ROLES ========== */
+const POSTOKEN = localStorage.getItem("user") + "_" + localStorage.getItem("pass");
 
-// Usuario logueado actualmente: { id, username, rol }
-let usuarioActual = null;
-
+/* ========== AUTH ========== */
 function checkSession() {
-  try {
-    const saved = localStorage.getItem("session_user");
-    if (!saved) return false;
-    const u = JSON.parse(saved);
-    if (u && u.id && u.username && u.rol) {
-      usuarioActual = u;
-      return true;
-    }
-  } catch {}
-  return false;
+  return localStorage.getItem("session") === "active"
+        && ((localStorage.getItem("user") != null && localStorage.getItem("user") != "")
+        && (localStorage.getItem("pass") != null && localStorage.getItem("pass") != ""));
 }
 
 async function doLogin() {
-  const userInput = document.getElementById("loginUser").value.trim().toLowerCase();
+  const userInput = document.getElementById("loginUser").value.trim();
   const passInput = document.getElementById("loginPass").value;
-  const errorEl   = document.getElementById("loginError");
-  const btn       = document.querySelector(".login-btn");
+  const errorEl = document.getElementById("loginError");
 
   errorEl.textContent = "";
 
@@ -695,110 +655,29 @@ async function doLogin() {
     errorEl.textContent = "Ingresá el usuario.";
     return;
   }
+
   if (!passInput) {
     document.getElementById("loginPass").classList.add("invalid");
     errorEl.textContent = "Ingresá la contraseña.";
     return;
   }
 
-  btn.disabled = true;
-  btn.textContent = "Verificando...";
-
-  try {
-    // Buscar usuario activo en Supabase
-    const { data: usuarios, error } = await supabase_res
-      .from("usuarios")
-      .select("id, username, password_hash, rol, activo")
-      .eq("username", userInput)
-      .eq("activo", true)
-      .limit(1);
-
-    if (error) throw error;
-
-    if (!usuarios || usuarios.length === 0) {
-      errorEl.textContent = "Usuario o contraseña incorrectos.";
-      return;
-    }
-
-    const usuario = usuarios[0];
-
-    // Verificar password con bcrypt (cargado como ES module en window.bcrypt)
-    if (!window.bcrypt) {
-      // Esperar hasta 3 segundos a que cargue el módulo
-      await new Promise((resolve, reject) => {
-        const t = setTimeout(() => reject(new Error("bcrypt timeout")), 3000);
-        window.addEventListener("bcrypt-ready", () => { clearTimeout(t); resolve(); }, { once: true });
-      }).catch(() => {});
-    }
-    if (!window.bcrypt) {
-      errorEl.textContent = "Error interno: módulo de seguridad no disponible. Recargá la página.";
-      return;
-    }
-    const match = await window.bcrypt.compare(passInput, usuario.password_hash);
-    if (!match) {
-      errorEl.textContent = "Usuario o contraseña incorrectos.";
-      return;
-    }
-
-    // Login exitoso
-    usuarioActual = { id: usuario.id, username: usuario.username, rol: usuario.rol };
-    localStorage.setItem("session_user", JSON.stringify(usuarioActual));
-
-    aplicarRol(usuario.rol);
-    await initMesas();
-    iniciarRealtimeMesas();
-    showMesasScreen();
-    cargarProductosSupabase();
-
-  } catch (err) {
-    console.error("Error en login:", err);
-    errorEl.textContent = "Error al conectar. Intentá nuevamente.";
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Ingresar`;
-  }
-}
-
-/**
- * Aplica el rol al <body> y actualiza el badge del header.
- * Las clases CSS .solo-cajero-admin y .solo-admin controlan visibilidad.
- */
-function aplicarRol(rol) {
-  document.body.classList.remove("rol-mozo", "rol-cajero", "rol-administrador");
-  document.body.classList.add("rol-" + rol);
-
-  const badge = document.getElementById("headerRolBadge");
-  if (badge) {
-    const labels = { mozo: "Mozo", cajero: "Cajero", administrador: "Admin" };
-    badge.textContent = labels[rol] || rol;
-    badge.className   = "rol-badge " + rol;
-  }
-
-  // Mostrar/ocultar botones de pago según rol (preservando el flex original del pay-row)
-  const puedecobrar = (rol === "cajero" || rol === "administrador");
-  const payRow  = document.getElementById("payRow");
-  const clearBtn = document.getElementById("clearBtn");
-  if (payRow)  payRow.style.display  = puedecobrar ? "" : "none";
-  if (clearBtn) clearBtn.style.display = puedecobrar ? "" : "none";
-}
-
-function tieneRol(...roles) {
-  return usuarioActual && roles.includes(usuarioActual.rol);
+  localStorage.setItem("user", userInput);
+  localStorage.setItem("pass", passInput);
+  localStorage.setItem("session", "active");
+  await initMesas();
+  iniciarRealtimeMesas();
+  showMesasScreen();
+  cargarProductosSupabase();
 }
 
 function doLogout() {
   if (!confirm("¿Cerrar sesión?")) return;
-  detenerPolling();
-  detenerRealtime();
-  localStorage.removeItem("session_user");
-  // legado
   localStorage.removeItem("session");
   localStorage.removeItem("user");
   localStorage.removeItem("pass");
-  usuarioActual     = null;
-  mesaSeleccionada  = null;
-  mesas             = [];
-  document.body.classList.remove("rol-mozo", "rol-cajero", "rol-administrador");
+  mesaSeleccionada = null;
+  mesas = [];
   showLogin();
 }
 
@@ -824,58 +703,34 @@ function showPOS() {
    SUPABASE HELPERS
 ========================= */
 
-async function cargarProductosSupabase(force = false) {
-  // Usar caché si no se fuerza recarga y hay datos recientes (< 5 min)
-  const cache = localStorage.getItem("productos");
-  const cacheTs = parseInt(localStorage.getItem("productos_timestamp") || "0");
-  const ahora = Date.now();
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+async function cargarProductosSupabase() {
+  const { data, error } = await supabase_res
+    .from("productos")
+    .select("*")
+    .eq("activo", true)
+    .order("categoria")
+    .order("nombre");
 
-  if (!force && cache && (ahora - cacheTs) < CACHE_TTL) {
-    try {
-      productos = JSON.parse(cache);
-      applyFilters();
-      return productos;
-    } catch {}
-  }
-
-  const stateEl = document.getElementById("stateCenter");
-  if (stateEl && document.getElementById("grid")?.innerHTML === "") {
-    stateEl.style.display = "flex";
-    stateEl.innerHTML = '<div class="spinner"></div>';
-  }
-
-  try {
-    const { data, error } = await supabase_res
-      .from("productos")
-      .select("*")
-      .eq("activo", true)
-      .order("categoria")
-      .order("nombre");
-
-    if (error) throw error;
-
-    productos = data.sort((a, b) => {
-      if (b.cantidad_ventas !== a.cantidad_ventas) {
-        return b.cantidad_ventas - a.cantidad_ventas;
-      }
-      return a.nombre.localeCompare(b.nombre, 'es');
-    });
-
-    applyFilters();
-    localStorage.setItem("productos", JSON.stringify(productos));
-    localStorage.setItem("productos_timestamp", String(ahora));
-
-    return productos;
-  } catch (error) {
-    console.error("Error cargando productos:", error);
+  if (error) {
+    console.error(error);
     showToast("Error cargando productos", "error");
-    // Intentar usar caché aunque sea viejo
-    if (cache) {
-      try { productos = JSON.parse(cache); applyFilters(); } catch {}
-    }
-    return productos;
+    return [];
   }
+
+   productos = data.sort((a, b) => {
+    // 1. Ordenar por ventas (mayor a menor)
+    if (b.cantidad_ventas !== a.cantidad_ventas) {
+      return b.cantidad_ventas - a.cantidad_ventas;
+    }
+  
+    // 2. Luego ordenar alfabéticamente por nombre
+    return a.nombre.localeCompare(b.nombre, 'es');
+  });
+
+  applyFilters();
+  localStorage.setItem("productos", JSON.stringify(productos));
+
+  return data || [];
 }
 
 async function cargarMesasSupabase() {
@@ -953,7 +808,6 @@ document.addEventListener("DOMContentLoaded", async function() {
   });
 
   if (checkSession()) {
-    aplicarRol(usuarioActual.rol);
     await initMesas();
     iniciarRealtimeMesas();
     showMesasScreen();
@@ -1027,138 +881,6 @@ let currentDiscount = 0;
 
 let mesas = [];
 let mesaSeleccionada = null;
-
-/* ========== REALTIME + POLLING SYNC ========== */
-let realtimeChannel  = null;
-let pollingInterval  = null;
-const POLLING_MS     = 10000; // cada 4 segundos
-
-/* Aplica datos remotos de una mesa al estado local y refresca toda la UI */
-function aplicarSyncMesa(mesaFresh) {
-  if (!mesaFresh) return;
-
-  // Actualizar array global de mesas
-  const idx = mesas.findIndex(m => m.id === mesaFresh.id);
-  if (idx !== -1) {
-    mesas[idx].carrito  = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
-    mesas[idx].descuento = mesaFresh.descuento || 0;
-    mesas[idx].nombre   = mesaFresh.nombre || mesas[idx].nombre;
-    mesas[idx].ocupada  = !mesaFresh.mesa_cerrada;
-  }
-
-  // Si hay una mesa seleccionada y es la que cambió
-  if (mesaSeleccionada && mesaSeleccionada.id === mesaFresh.id) {
-    const carritoRemoto = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
-    const localStr  = JSON.stringify(mesaSeleccionada.carrito);
-    const remoteStr = JSON.stringify(carritoRemoto);
-
-    //if (localStr !== remoteStr) {
-      mesaSeleccionada.carrito = carritoRemoto;
-
-      // Forzar re-render completo
-      updateTotal();
-      applyFilters();
-      renderCartItems();
-
-      if (carritoRemoto.length === 0 && drawerOpen) {
-        closeDrawer();
-        showToast("Mesa cerrada desde otro dispositivo", "info");
-      } else if (carritoRemoto.length > 0) {
-        //showToast("Carrito actualizado desde otro dispositivo", "info");
-      }
-    //}
-  }
-}
-
-/* Polling: consulta el estado de la mesa activa cada POLLING_MS ms */
-function iniciarPolling() {
-  detenerPolling();
-  pollingInterval = setInterval(async () => {
-    // Solo si estamos dentro de una mesa
-    if (!mesaSeleccionada) return;
-    const posApp = document.getElementById("posApp");
-    if (!posApp || posApp.style.display === "none") return;
-
-    try {
-      const { data, error } = await supabase_res
-        .from("mesas")
-        .select("id, carrito, descuento, nombre, mesa_cerrada")
-        .eq("id", mesaSeleccionada.id)
-        .single();
-      if (!error && data) aplicarSyncMesa(data);
-    } catch (e) {
-      console.warn("[Polling] Error:", e);
-    }
-  }, POLLING_MS);
-}
-
-function detenerPolling() {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
-  }
-}
-
-/**
- * Suscribe a cambios en tiempo real de la tabla mesas via Supabase Realtime.
- * - En pantalla de mesas: refresca el grid automaticamente.
- * - Dentro de una mesa: sincroniza el carrito si cambia desde otro dispositivo.
- */
-function iniciarRealtimeMesas() {
-  if (realtimeChannel) {
-    supabase_res.removeChannel(realtimeChannel);
-  }
-
-  // Canal único por sesión para evitar conflictos entre dispositivos
-  const canalId = "mesas-cambios-" + Math.random().toString(36).slice(2, 8);
-
-  realtimeChannel = supabase_res
-    .channel(canalId)
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "mesas" },
-      async (payload) => {
-        const cambioId = (payload.new || payload.old || {}).id;
-        if (!cambioId) return;
-
-        // Fetch directo para garantizar datos completos (JSONB puede venir incompleto en payload)
-        const { data: mesaFresh, error } = await supabase_res
-          .from("mesas")
-          .select("id, carrito, descuento, nombre, mesa_cerrada")
-          .eq("id", cambioId)
-          .single();
-
-        if (error || !mesaFresh) return;
-
-        // Pantalla de mesas: solo refrescar grid
-        const mesasScreen = document.getElementById("mesasScreen");
-        if (mesasScreen && mesasScreen.style.display !== "none") {
-          const idx = mesas.findIndex(m => m.id === cambioId);
-          if (idx !== -1) {
-            mesas[idx].carrito  = Array.isArray(mesaFresh.carrito) ? mesaFresh.carrito : [];
-            mesas[idx].descuento = mesaFresh.descuento || 0;
-            mesas[idx].nombre   = mesaFresh.nombre || mesas[idx].nombre;
-            mesas[idx].ocupada  = !mesaFresh.mesa_cerrada;
-          }
-          renderMesas();
-          return;
-        }
-
-        // Dentro de una mesa: usar helper compartido con polling
-        aplicarSyncMesa(mesaFresh);
-      }
-    )
-    .subscribe((status) => {
-      console.log("[Realtime] Estado del canal:", status);
-    });
-}
-
-function detenerRealtime() {
-  if (realtimeChannel) {
-    supabase_res.removeChannel(realtimeChannel);
-    realtimeChannel = null;
-  }
-}
 
 // Carrito activo: siempre el de la mesa seleccionada (o array vacío de fallback)
 Object.defineProperty(window, "carrito", {
@@ -1329,38 +1051,22 @@ function renderMesas() {
   stateEl.style.display = "none";
 }
 
-async function seleccionarMesa(mesa) {
+function seleccionarMesa(mesa) {
   mesaSeleccionada = mesa;
 
-  // Re-fetch datos frescos de Supabase antes de mostrar la mesa
-  try {
-    const { data: fresh, error } = await supabase_res
-      .from("mesas")
-      .select("carrito, descuento, nombre")
-      .eq("id", mesa.id)
-      .single();
-    if (!error && fresh) {
-      mesaSeleccionada.carrito   = Array.isArray(fresh.carrito) ? fresh.carrito : [];
-      mesaSeleccionada.descuento = fresh.descuento || 0;
-      mesaSeleccionada.nombre    = fresh.nombre || mesa.nombre;
-    }
-  } catch (e) {
-    console.warn("No se pudo refrescar la mesa:", e);
-  }
-
-  // Restaurar descuento guardado en la mesa (es porcentaje si lo hay)
-  document.getElementById("discount").value      = mesaSeleccionada.descuento || "";
-  document.getElementById("discountDesc").value  = mesaSeleccionada.descuentoDesc || "";
+  // Restaurar descuento guardado en la mesa
+  document.getElementById("discount").value      = mesa.descuento     || "";
+  document.getElementById("discountDesc").value  = mesa.descuentoDesc || "";
   currentDiscount = 0; // se recalculará en updateTotal
 
   // Mostrar botón volver + badge header
   document.getElementById("btnVolverMesas").style.display = "inline-flex";
   document.getElementById("mesaBadge").style.display  = "block";
-  document.getElementById("mesaBadge").textContent    = `🍽️ ${mesaLabel(mesaSeleccionada)}`;
+  document.getElementById("mesaBadge").textContent    = `🍽️ ${mesaLabel(mesa)}`;
 
   // Badge en el drawer
   document.getElementById("drawerMesaBadge").style.display   = "inline-block";
-  document.getElementById("drawerMesaBadge").textContent     = mesaLabel(mesaSeleccionada);
+  document.getElementById("drawerMesaBadge").textContent     = mesaLabel(mesa);
 
   // Ocultar mesas, mostrar POS
   document.getElementById("mesasScreen").style.display = "none";
@@ -1371,14 +1077,10 @@ async function seleccionarMesa(mesa) {
 
   updateTotal();
   applyFilters();
-
-  // Iniciar polling para esta mesa
-  iniciarPolling();
 }
 
 function volverAMesas() {
-  detenerPolling();
-
+  
   // Guardar descuento de la mesa activa en Supabase
   if (mesaSeleccionada) {
     mesaSeleccionada.descuento      = parseFloat(document.getElementById("discount").value) || 0;
@@ -1517,6 +1219,7 @@ function renderProductos(lista = productos) {
 }
 
 /* ========== CARRITO ========== */
+  /*
 function addToCart(prod) {
   const item = carrito.find(i => i.id === prod.id);
   if (item) item.cantidad++;
@@ -1528,7 +1231,37 @@ function addToCart(prod) {
 
   if (drawerOpen) renderCartItems();
 }
+*/
+function addToCart(prod) {
 
+  const item = carrito.find(
+    i => i.id === prod.id
+  );
+
+  if (item) {
+    item.cantidad++;
+  } else {
+    carrito.push({
+      id: prod.id,
+      nombre: prod.nombre,
+      precio: prod.precio,
+      cantidad: 1
+    });
+  }
+
+  updateTotal();
+
+  if (drawerOpen) {
+    renderCartItems();
+  }
+
+  applyFilters();
+
+  saveCart();
+
+  navigator.vibrate?.(20);
+}
+/*
 function changeQty(id, delta) {
   const idx = carrito.findIndex(i => i.id === id);
   if (idx === -1) return;
@@ -1539,7 +1272,29 @@ function changeQty(id, delta) {
   applyFilters();
   renderCartItems();
 }
+*/
+function changeQty(id, delta) {
 
+  const idx = carrito.findIndex(
+    i => i.id === id
+  );
+
+  if (idx === -1) return;
+
+  carrito[idx].cantidad += delta;
+
+  if (carrito[idx].cantidad <= 0) {
+    carrito.splice(idx, 1);
+  }
+
+  updateTotal();
+
+  renderCartItems();
+
+  applyFilters();
+
+  saveCart();
+}
 function removeFromCart(id) {
   carrito = carrito.filter(i => i.id !== id);
   saveCart();
@@ -1560,14 +1315,178 @@ function clearCart() {
   renderCartItems();
   navigator.vibrate?.(30);
 }
-
+/*
 function saveCart() {
   // Persistir carrito de la mesa activa en Supabase
   if (mesaSeleccionada) {
     guardarMesaSupabase(mesaSeleccionada).catch(e => console.error("Error guardando carrito:", e));
   }
 }
+*/
+//let saveTimeout = null;
+/*
+async function saveCart() {
 
+  if (!mesaSeleccionada) return;
+
+  clearTimeout(saveTimeout);
+
+  saveTimeout = setTimeout(async () => {
+
+    try {
+
+      // 1. LEER ESTADO MÁS RECIENTE
+      const { data: mesaRemota, error } = await supabase_res
+        .from("mesas")
+        .select("*")
+        .eq("id", mesaSeleccionada.id)
+        .single();
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      // 2. MERGE DEL CARRITO
+      const carritoRemoto = Array.isArray(mesaRemota.carrito)
+        ? mesaRemota.carrito
+        : [];
+
+      const carritoLocal = carrito;
+
+      const carritoFinal = mergeCarritos(
+        carritoRemoto,
+        carritoLocal
+      );
+
+      const subtotal = carritoFinal.reduce(
+        (s, i) => s + (i.precio * i.cantidad),
+        0
+      );
+
+      const descuento = parseFloat(
+        document.getElementById("discount").value
+      ) || 0;
+
+      const total = subtotal - (
+        subtotal * descuento / 100
+      );
+
+      // 3. GUARDAR
+      const { error: updateError } = await supabase_res
+        .from("mesas")
+        .update({
+          carrito: carritoFinal,
+          subtotal,
+          descuento,
+          total,
+          mesa_cerrada: carritoFinal.length === 0
+        })
+        .eq("id", mesaSeleccionada.id);
+
+      if (updateError) {
+        console.error(updateError);
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+
+  }, 200);
+}
+
+function mergeCarritos(remoto, local) {
+
+  const mapa = new Map();
+
+  // remoto primero
+  remoto.forEach(item => {
+    mapa.set(item.id, { ...item });
+  });
+
+  // merge local
+  local.forEach(item => {
+
+    if (mapa.has(item.id)) {
+
+      const existente = mapa.get(item.id);
+
+      // tomar la mayor cantidad
+      existente.cantidad = Math.max(
+        existente.cantidad,
+        item.cantidad
+      );
+
+    } else {
+
+      mapa.set(item.id, { ...item });
+    }
+  });
+
+  return Array.from(mapa.values());
+}
+*/
+let saveTimeout = null;
+let savingCart = false;
+
+async function saveCart() {
+
+  if (!mesaSeleccionada) return;
+
+  clearTimeout(saveTimeout);
+
+  saveTimeout = setTimeout(async () => {
+
+    if (savingCart) return;
+
+    savingCart = true;
+
+    try {
+
+      const subtotal = carrito.reduce(
+        (s, i) => s + (i.precio * i.cantidad),
+        0
+      );
+
+      const descuento = parseFloat(
+        document.getElementById("discount").value
+      ) || 0;
+
+      const total = subtotal - (
+        subtotal * descuento / 100
+      );
+
+      const carritoClonado = JSON.parse(
+        JSON.stringify(carrito)
+      );
+
+      const { error } = await supabase_res
+        .from("mesas")
+        .update({
+          carrito: carritoClonado,
+          subtotal,
+          descuento,
+          total,
+          mesa_cerrada: carritoClonado.length === 0
+        })
+        .eq("id", mesaSeleccionada.id);
+
+      if (error) {
+        console.error(error);
+      }
+
+    } catch (err) {
+
+      console.error(err);
+
+    } finally {
+
+      savingCart = false;
+
+    }
+
+  }, 120);
+      }
 function loadCart() {
   // No-op: el carrito se carga al seleccionar la mesa
 }
@@ -1796,10 +1715,6 @@ function confirmarPagoEfectivo() {
 /* ========== PAGO ========== */
 async function pagar(metodo) {
   if (carrito.length === 0) return;
-  if (!tieneRol("cajero", "administrador")) {
-    showToast("No tenés permiso para procesar pagos.", "error");
-    return;
-  }
 
   const desc = document.getElementById("discountDesc").value || "Sin descripción";
   const items = carrito.map(i => ({
@@ -1829,25 +1744,6 @@ async function pagar(metodo) {
   setPayBtnsDisabled(true);
 
   try {
-    // 0. Verificar que la mesa no haya sido cobrada ya desde otro dispositivo
-    const { data: mesaActual, error: errCheck } = await supabase_res
-      .from("mesas")
-      .select("mesa_cerrada, carrito")
-      .eq("id", mesaSeleccionada.id)
-      .single();
-
-    if (errCheck) throw errCheck;
-
-    if (mesaActual.mesa_cerrada || !mesaActual.carrito || mesaActual.carrito.length === 0) {
-      showToast("Esta mesa ya fue cobrada desde otro dispositivo.", "error");
-      mesaSeleccionada.carrito = [];
-      updateTotal();
-      applyFilters();
-      closeDrawer();
-      setTimeout(() => volverAMesas(), 1200);
-      return;
-    }
-
     // 1. Registrar la venta en Supabase
     await guardarVentaSupabase({
       mesa:     mesaSeleccionada,
@@ -1932,10 +1828,6 @@ let reportChart = null;
 let activeQuickFilter = null;
 
 function openReport() {
-  if (!tieneRol("administrador")) {
-    showToast("Solo el administrador puede ver reportes.", "error");
-    return;
-  }
   document.getElementById("reportPanel").classList.add("open");
   if (ventasCache.length === 0) {
     cargarVentas();
@@ -2315,10 +2207,6 @@ function handleModalOverlayClick(e) {
 }
 
 async function guardarProducto() {
-  if (!tieneRol("administrador")) {
-    showToast("No tenés permiso para modificar productos.", "error");
-    return;
-  }
   const nombre = document.getElementById("prodNombre").value.trim();
   const descripcion = document.getElementById("prodDescripcion").value.trim();
   const precio = parseFloat(document.getElementById("prodPrecio").value);
@@ -2383,10 +2271,6 @@ async function guardarProducto() {
 }
 
 async function eliminarProducto() {
-  if (!tieneRol("administrador")) {
-    showToast("No tenés permiso para eliminar productos.", "error");
-    return;
-  }
   if (!editingProductId) return;
   if (!confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) return;
 
