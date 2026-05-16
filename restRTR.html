@@ -593,7 +593,8 @@ let usuarioActual = null;
 function iniciarRealtimeMesas() {
 
   if (mesasChannel) {
-    supabase_res.removeChannel(mesasChannel);
+   // supabase_res
+      window.supabase_res.removeChannel(mesasChannel);
   }
 
   mesasChannel = supabase_res
@@ -694,7 +695,7 @@ function checkSession() {
 */
 async function checkSession() {
 
-  const { data } = await supabase_res.auth.getSession();
+  const { data } = await window.supabase_res.auth.getSession();
 
   if (!data.session) {
     return false;
@@ -702,7 +703,7 @@ async function checkSession() {
 
   const user = data.session.user;
 
-  const { data: usuario } = await supabase_res
+  const { data: usuario } = await window.supabase_res
     .from("usuarios")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -780,7 +781,7 @@ async function doLogin() {
   const user = data.user;
 
   const { data: usuario, error: errorUsuario } =
-    await supabase_res
+    await window.supabase_res
       .from("usuarios")
       .select("*")
       .eq("auth_user_id", user.id)
