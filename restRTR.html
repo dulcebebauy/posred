@@ -563,7 +563,7 @@ const SUPABASE_URL = "https://rdxnnngdnslxnsgtgqzf.supabase.co";
 import { createClient }
 from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-const supabase_res = window.supabase.createClient(
+windows.supabase_res = createClient(
   SUPABASE_URL,
   //"sb_publishable_YiPcokZRtA-8fKkq8eMW9w_YCSnw84j"
   "sb_publishable_hfbsKDlF0mPBNIbU7ACCeg_p2WZsMGh"
@@ -595,7 +595,7 @@ function iniciarRealtimeMesas() {
 
   if (mesasChannel) {
    // supabase_res
-      supabase_res.removeChannel(mesasChannel);
+      windows.supabase_res.removeChannel(mesasChannel);
   }
 
   mesasChannel = supabase_res
@@ -696,7 +696,7 @@ function checkSession() {
 */
 async function checkSession() {
 
-  const { data } = await supabase_res.auth.getSession();
+  const { data } = await windows.supabase_res.auth.getSession();
 
   if (!data.session) {
     return false;
@@ -704,7 +704,7 @@ async function checkSession() {
 
   const user = data.session.user;
 
-  const { data: usuario } = await supabase_res
+  const { data: usuario } = await windows.supabase_res
     .from("usuarios")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -768,7 +768,7 @@ async function doLogin() {
 
   const { data, error } =
     //await supabase_res.auth.signInWithPassword({
-    await supabase_res.auth.signInWithPassword({  
+    await windows.supabase_res.auth.signInWithPassword({  
       email,
       password
     });
@@ -782,7 +782,7 @@ async function doLogin() {
   const user = data.user;
 
   const { data: usuario, error: errorUsuario } =
-    await supabase_res
+    await windows.supabase_res
       .from("usuarios")
       .select("*")
       .eq("auth_user_id", user.id)
@@ -823,7 +823,7 @@ async function doLogout() {
 
   if (!confirm("¿Cerrar sesión?")) return;
 
-  await supabase_res.auth.signOut();
+  await windows.supabase_res.auth.signOut();
 
   usuarioActual = null;
 
@@ -856,7 +856,7 @@ function showPOS() {
 ========================= */
 
 async function cargarProductosSupabase() {
-  const { data, error } = await supabase_res
+  const { data, error } = await windows.supabase_res
     .from("productos")
     .select("*")
     .eq("activo", true)
@@ -886,7 +886,7 @@ async function cargarProductosSupabase() {
 }
 
 async function cargarMesasSupabase() {
-  const { data, error } = await supabase_res
+  const { data, error } = await windows.supabase_res
     .from("mesas")
     .select("*")
     .order("numero");
@@ -910,7 +910,7 @@ async function guardarMesaSupabase(mesa) {
 
   const total = subtotal - descuento;
 
-  const { error } = await supabase_res
+  const { error } = await windows.supabase_res
     .from("mesas")
     .update({
       carrito: mesa.carrito,
@@ -936,7 +936,7 @@ async function guardarVentaSupabase({
   metodo
 }) {
 
-  const { error } = await supabase_res
+  const { error } = await windows.supabase_res
     .from("ventas")
     .insert({
       mesa_id: mesa.id,
@@ -1127,7 +1127,7 @@ async function initMesas() {
 }
 
 async function crearMesaSupabase(numero, nombreDefault = "") {
-  const { data, error } = await supabase_res
+  const { data, error } = await windows.supabase_res
     .from("mesas")
     .insert({ numero, nombre: nombreDefault, carrito: [], mesa_cerrada: true })
     .select()
@@ -1662,7 +1662,7 @@ async function saveCart() {
         JSON.stringify(carrito)
       );
 
-      const { error } = await supabase_res
+      const { error } = await windows.supabase_res
         .from("mesas")
         .update({
           carrito: carritoClonado,
@@ -1992,7 +1992,7 @@ async function pagar(metodo) {
     });
 
     // 2. Limpiar la mesa en Supabase
-    const { error: errMesa } = await supabase_res
+    const { error: errMesa } = await windows.supabase_res
       .from("mesas")
       .update({
         carrito:      [],
@@ -2116,7 +2116,7 @@ async function cargarVentas() {
   document.getElementById("reportSubtitle").textContent = "Actualizando...";
 
   try {
-    const { data, error } = await supabase_res
+    const { data, error } = await windows.supabase_res
       .from("ventas")
       .select("*")
       .order("created_at", { ascending: false });
@@ -2480,14 +2480,14 @@ async function guardarProducto() {
   try {
     if (id) {
       // Editar producto existente
-      const { error } = await supabase_res
+      const { error } = await windows.supabase_res
         .from("productos")
         .update({ nombre, descripcion, precio, categoria })
         .eq("id", id);
       if (error) throw error;
     } else {
       // Agregar producto nuevo
-      const { error } = await supabase_res
+      const { error } = await windows.supabase_res
         .from("productos")
         .insert({ nombre, descripcion, precio, categoria, activo: true });
       if (error) throw error;
@@ -2516,7 +2516,7 @@ async function eliminarProducto() {
 
   try {
     // Soft delete: marcar como inactivo en Supabase
-    const { error } = await supabase_res
+    const { error } = await windows.supabase_res
       .from("productos")
       .update({ activo: false })
       .eq("id", editingProductId);
@@ -2544,7 +2544,7 @@ async function generarRespaldo() {
 
   try {
     // Exportar ventas desde Supabase como JSON descargable
-    const { data, error } = await supabase_res
+    const { data, error } = await windows.supabase_res
       .from("ventas")
       .select("*")
       .order("created_at", { ascending: false });
@@ -2638,7 +2638,7 @@ async function guardarNombreMesa() {
 
   // Persistir nombre en Supabase si la mesa tiene id
   if (mesaEditando.id) {
-    const { error } = await supabase_res
+    const { error } = await windows.supabase_res
       .from("mesas")
       .update({ nombre: val })
       .eq("id", mesaEditando.id);
