@@ -785,8 +785,8 @@ async function doLogin() {
     await window.supabase_res
       .from("usuarios")
       .select("*")
-      .eq("auth_user_id", user.identities[0].user_id);
-      //.single();
+      .eq("auth_user_id", user.id)
+      .single();
 
   if (errorUsuario || !usuario) {
     errorEl.textContent = "Usuario sin permisos";
