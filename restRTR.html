@@ -563,7 +563,7 @@ const SUPABASE_URL = "https://rdxnnngdnslxnsgtgqzf.supabase.co";
 import { createClient }
 from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-window.supabase_res = createClient(
+const supabase_res = window.supabase_res.createClient(
   SUPABASE_URL,
   //"sb_publishable_YiPcokZRtA-8fKkq8eMW9w_YCSnw84j"
   "sb_publishable_hfbsKDlF0mPBNIbU7ACCeg_p2WZsMGh"
@@ -595,7 +595,7 @@ function iniciarRealtimeMesas() {
 
   if (mesasChannel) {
    // supabase_res
-      window.supabase_res.removeChannel(mesasChannel);
+      supabase_res.removeChannel(mesasChannel);
   }
 
   mesasChannel = supabase_res
@@ -696,7 +696,7 @@ function checkSession() {
 */
 async function checkSession() {
 
-  const { data } = await window.supabase_res.auth.getSession();
+  const { data } = await supabase_res.auth.getSession();
 
   if (!data.session) {
     return false;
@@ -704,7 +704,7 @@ async function checkSession() {
 
   const user = data.session.user;
 
-  const { data: usuario } = await window.supabase_res
+  const { data: usuario } = await supabase_res
     .from("usuarios")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -768,7 +768,7 @@ async function doLogin() {
 
   const { data, error } =
     //await supabase_res.auth.signInWithPassword({
-    await window.supabase_res.auth.signInWithPassword({  
+    await supabase_res.auth.signInWithPassword({  
       email,
       password
     });
@@ -782,7 +782,7 @@ async function doLogin() {
   const user = data.user;
 
   const { data: usuario, error: errorUsuario } =
-    await window.supabase_res
+    await supabase_res
       .from("usuarios")
       .select("*")
       .eq("auth_user_id", user.id)
