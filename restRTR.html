@@ -139,6 +139,66 @@
     padding: 0px 8px 0 8px;
     color: white !important
 }
+
+/* ===== TOGGLE MOSTRAR CARTA ===== */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 26px;
+  transition: background .2s;
+}
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: #1d4ed8;
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+.toggle-label-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.toggle-on-text  { color: #1d4ed8; }
+.toggle-off-text { color: #94a3b8; }
+.toggle-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 6px 0 0 0;
+  line-height: 1.4;
+}
 </style>
 </head>
 <audio id="successSound" src="success_premium.mp3" preload="auto"></audio>  
@@ -536,6 +596,36 @@
           </label>
         </div>
       </div>
+
+      <!-- Campo: Mostrar en la carta -->
+      <div class="form-group" style="margin-top:4px;">
+        <label style="margin-bottom:10px;display:block;">Visibilidad en la carta</label>
+
+        <label class="toggle-row" for="prodMostrarCarta">
+          <span class="toggle-switch">
+            <input type="checkbox" id="prodMostrarCarta" checked>
+            <span class="toggle-slider"></span>
+          </span>
+          <span class="toggle-label-text">
+            <span class="toggle-on-text" id="toggleCartaOn">Visible en la carta</span>
+            <span class="toggle-off-text" id="toggleCartaOff" style="display:none;">Oculto en la carta</span>
+          </span>
+        </label>
+        <p class="toggle-hint">Si está activo, el producto aparecerá en la carta digital.</p>
+
+        <label class="toggle-row" for="prodMostrarPrecioCarta" style="margin-top:10px;" id="rowMostrarPrecio">
+          <span class="toggle-switch">
+            <input type="checkbox" id="prodMostrarPrecioCarta" checked>
+            <span class="toggle-slider"></span>
+          </span>
+          <span class="toggle-label-text">
+            <span class="toggle-on-text" id="togglePrecioOn">Precio visible en la carta</span>
+            <span class="toggle-off-text" id="togglePrecioOff" style="display:none;">Precio oculto en la carta</span>
+          </span>
+        </label>
+        <p class="toggle-hint" id="hintMostrarPrecio">Si está activo, el precio se mostrará junto al producto en la carta.</p>
+      </div>
+
     </div>
 
     <div class="modal-footer">
@@ -2443,6 +2533,18 @@ function openProductModal(producto) {
     r.checked = producto ? r.value === producto.categoria : false;
   });
 
+  // mostrar_carta: true por defecto en productos nuevos
+  const mostrarCarta = producto ? (producto.mostrar_carta !== false) : true;
+  const toggleEl = document.getElementById("prodMostrarCarta");
+  toggleEl.checked = mostrarCarta;
+  actualizarTextoToggle(mostrarCarta);
+
+  // mostrar_precio_carta: true por defecto en productos nuevos
+  const mostrarPrecioCarta = producto ? (producto.mostrar_precio_carta !== false) : true;
+  const togglePrecioEl = document.getElementById("prodMostrarPrecioCarta");
+  togglePrecioEl.checked = mostrarPrecioCarta;
+  actualizarTextoTogglePrecio(mostrarPrecioCarta);
+
   document.getElementById("prodNombre").classList.remove("invalid");
   document.getElementById("prodPrecio").classList.remove("invalid");
 
@@ -2467,6 +2569,8 @@ async function guardarProducto() {
   const descripcion = document.getElementById("prodDescripcion").value.trim();
   const precio = parseFloat(document.getElementById("prodPrecio").value);
   const categoria = document.querySelector(".cat-option:checked")?.value || "";
+  const mostrar_carta = document.getElementById("prodMostrarCarta").checked;
+  const mostrar_precio_carta = document.getElementById("prodMostrarPrecioCarta").checked;
   const id = editingProductId;
 
   let valid = true;
@@ -2501,14 +2605,14 @@ async function guardarProducto() {
       // Editar producto existente
       const { error } = await window.supabase_res
         .from("productos")
-        .update({ nombre, descripcion, precio, categoria })
+        .update({ nombre, descripcion, precio, categoria, mostrar_carta, mostrar_precio_carta })
         .eq("id", id);
       if (error) throw error;
     } else {
       // Agregar producto nuevo
       const { error } = await window.supabase_res
         .from("productos")
-        .insert({ nombre, descripcion, precio, categoria, activo: true });
+        .insert({ nombre, descripcion, precio, categoria, activo: true, mostrar_carta, mostrar_precio_carta });
       if (error) throw error;
     }
 
@@ -2634,6 +2738,33 @@ function playSuccessSound() {
   //vibrar();
 }
 
+function actualizarTextoToggle(checked) {
+  const onText  = document.getElementById("toggleCartaOn");
+  const offText = document.getElementById("toggleCartaOff");
+  if (!onText || !offText) return;
+  onText.style.display  = checked ? "inline" : "none";
+  offText.style.display = checked ? "none"   : "inline";
+
+  // Si se oculta el producto en la carta, deshabilitar el toggle de precio
+  const rowPrecio  = document.getElementById("rowMostrarPrecio");
+  const hintPrecio = document.getElementById("hintMostrarPrecio");
+  if (rowPrecio) {
+    rowPrecio.style.opacity        = checked ? "1"       : "0.4";
+    rowPrecio.style.pointerEvents  = checked ? "auto"    : "none";
+  }
+  if (hintPrecio) {
+    hintPrecio.style.opacity = checked ? "1" : "0.4";
+  }
+}
+
+function actualizarTextoTogglePrecio(checked) {
+  const onText  = document.getElementById("togglePrecioOn");
+  const offText = document.getElementById("togglePrecioOff");
+  if (!onText || !offText) return;
+  onText.style.display  = checked ? "inline" : "none";
+  offText.style.display = checked ? "none"   : "inline";
+}
+
 /* ========== NOMBRE DE MESA ========== */
 let mesaEditando = null;
 
@@ -2677,6 +2808,16 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("nombreModalInput")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") guardarNombreMesa();
     if (e.key === "Escape") cerrarNombreModal();
+  });
+
+  // Toggle mostrar_carta: actualizar texto al cambiar
+  document.getElementById("prodMostrarCarta")?.addEventListener("change", function() {
+    actualizarTextoToggle(this.checked);
+  });
+
+  // Toggle mostrar_precio_carta: actualizar texto al cambiar
+  document.getElementById("prodMostrarPrecioCarta")?.addEventListener("change", function() {
+    actualizarTextoTogglePrecio(this.checked);
   });
 });
 </script>
