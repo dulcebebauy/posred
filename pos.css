@@ -877,7 +877,7 @@ body {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 800;
 }
-
+/*
 .pay-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -895,7 +895,33 @@ body {
   cursor: pointer;
   transition: filter 0.15s, transform 0.1s, opacity 0.2s;
 }
+*/
+.pay-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
 
+.pay-btn {
+  height: 50px;
+  border: none;
+  border-radius: 10px;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  padding: 0 6px;
+}
 .pay-btn:active { transform: scale(0.97); }
 .pay-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .pay-btn:not(:disabled):hover { filter: brightness(1.08); }
