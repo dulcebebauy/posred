@@ -1173,7 +1173,7 @@ function saveMesas() {
 
 /* -------- PANTALLA DE MESAS -------- */
 function showMesasScreen() {
-  document.getElementById("usuarioHeader").textContent = usuarioActual?.nombre || "";
+  document.getElementById("usuarioHeader").textContent = usuarioActual?.username + " | " + usuarioActual?.rol || "";
   
   document.getElementById("reportBtn").style.display =
   puedeVerReportes()
